@@ -1,0 +1,7 @@
+**/__pycache__
+**/cache
+**.ipynb_checkpoints
+
+build/
+dist/
+oterogeneity.egg-info/
