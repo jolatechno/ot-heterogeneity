@@ -70,10 +70,11 @@ The function returns a result as an object of class `ot_heterogeneity_results`.
 The `ot_heterogeneity_populations` function uses the total population distribution accross all classes as the null distribution. It thus assumes the nul distribution is the distribution where the total population at each location doesn't change, and the proportion of each category is the same as the global distribution of classes.
 
 ```python
-def ot_heterogeneity_populations(
-	distrib, distance_mat, unitary_direction_matrix=None,
-	epsilon_exponent=-1e-3 : float, use_same_exponent_weight=True : bool, 
-	min_value_avoid_zeros=1e-6 : float
+def ot_heterogeneity_from_null_distrib(
+	distrib, null_distrib, distance_mat,
+	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
+	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
+	min_value_avoid_zeros: float=1e-5
 )
 ```
 
@@ -96,8 +97,9 @@ _The `ot_heterogeneity_linear_regression` function will be documented later on._
 ```python
 def ot_heterogeneity_linear_regression(
 	distrib, prediction_distrib, distance_mat, local_weight_distrib=None, unitary_direction_matrix=None,
-	fit_regression=True : bool, regression=linear_model.LinearRegression(), epsilon_exponent=-1e-3 : float,
-	use_same_exponent_weight=True : bool, min_value_avoid_zeros=1e-6 : float
+	fit_regression=True : bool, regression=linear_model.LinearRegression(), 
+	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
+	min_value_avoid_zeros: float=1e-5
 )
 ```
 
@@ -108,7 +110,7 @@ def ot_heterogeneity_linear_regression(
 The `compute_distance_matrix` function computes the distance between a list of coordinates.
 
 ```python
-def compute_distance_matrix(coordinates, exponent=2 : float)
+def compute_distance_matrix(coordinates, exponent: float=2)
 ```
 
 The `compute_distance_matrix` function takes the following parameters :
@@ -122,7 +124,7 @@ It returns the distance matrix filled with the distance between each location.
 The `compute_distance_matrix_polar` function computes the distance between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
 ```python
-def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137  : float, unit="deg" : str)
+def compute_distance_matrix_polar(latitudes, longitudes, radius: float=6378137, unit: str="deg")
 ```
 
 The `compute_distance_matrix` function takes the following parameters :
@@ -138,7 +140,7 @@ It returns the distance matrix filled with the distance between each location.
 The `compute_unitary_direction_matrix` function computes the matrix of unitary vectors used to computed direction in the main functions.
 
 ```python
-def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2 : float)
+def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent: float=2)
 ```
 
 The `compute_unitary_direction_matrix` function takes the following parameters :
@@ -155,7 +157,7 @@ It returns the following values :
 The `compute_unitary_direction_matrix_polar` function computes the matrix of unitary vectors used to computed direction in the main functions, between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
 ```python
-def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius=6378137 : float, unit="deg" : str)
+def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius: float=6378137, unit: str="deg")
 ```
 
 The `compute_unitary_direction_matrix_polar` function takes the following parameters :

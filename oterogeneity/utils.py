@@ -1,6 +1,6 @@
 import numpy as np
 
-def compute_distance_matrix(coordinates, exponent=2 : float):
+def compute_distance_matrix(coordinates, exponent: float=2):
 	'''
     The compute_distance_matrix function computes the distance between a list of coordinates.
 
@@ -21,7 +21,7 @@ def compute_distance_matrix(coordinates, exponent=2 : float):
 
 	return distance_mat
 
-def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137  : float, unit="deg" : str):
+def compute_distance_matrix_polar(latitudes, longitudes, radius: float=6378137, unit: str="deg"):
 	'''
 	The compute_distance_matrix_polar function computes the distance between a list of coordinates from polar
 	coordinates on a sphere. by default it can be used for typical coordinates on earth.
@@ -56,7 +56,7 @@ def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137  : float
 
 	return distance_mat
 
-def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2 : float):
+def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent: float=2):
 	'''
 	The compute_unitary_direction_matrix function computes the matrix of unitary vectors used to computed
 	direction in the main functions.
@@ -92,7 +92,7 @@ def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2 
 		return unitary_direction_matrix, distance_mat
 	return unitary_direction_matrix
 
-def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius=6378137 : float, unit="deg" : str):
+def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius: float=6378137, unit: str="deg"):
 	'''
 	The compute_unitary_direction_matrix_polar function computes the matrix of unitary vectors used to computed
 	direction in the main functions, between a list of coordinates from polar coordinates on a sphere. by default

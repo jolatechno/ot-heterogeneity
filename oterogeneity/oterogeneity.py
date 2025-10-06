@@ -34,7 +34,7 @@ class ot_heterogeneity_results:
 			vectorial field of directionality for each category.
     '''
 
-	def __init__(self, size=0 : int, num_categories=0 : int, num_dimensions=1 : int, has_direction=False : bool):
+	def __init__(self, size: int=0, num_categories: int=0, num_dimensions: int=1, has_direction : bool=False):
 		if size <= 0:
 			self.size, self.num_categories, self.num_dimensions, self.has_direction = size, 0, num_dimensions, False
 			self.global_heterogeneity                      = None
@@ -83,8 +83,8 @@ class ot_heterogeneity_results:
 def ot_heterogeneity_from_null_distrib(
 	distrib, null_distrib, distance_mat,
 	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
-	epsilon_exponent=-1e-3 : float, use_same_exponent_weight=True : bool,
-	min_value_avoid_zeros=1e-5 : float
+	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
+	min_value_avoid_zeros: float=1e-5
 ):
 	'''
     The ot_heterogeneity_from_null_distrib function is the most general function implementing our method for measuring
@@ -180,8 +180,8 @@ def ot_heterogeneity_from_null_distrib(
 
 def ot_heterogeneity_populations(
 	distrib, distance_mat, unitary_direction_matrix=None,
-	epsilon_exponent=-1e-3 : float, use_same_exponent_weight=True : bool, 
-	min_value_avoid_zeros=1e-6 : float
+	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
+	min_value_avoid_zeros: float=1e-5
 ):
 	'''
     The ot_heterogeneity_populations function uses the total population distribution accross all classes as the null
@@ -213,8 +213,9 @@ def ot_heterogeneity_populations(
 
 def ot_heterogeneity_linear_regression(
 	distrib, prediction_distrib, distance_mat, local_weight_distrib=None, unitary_direction_matrix=None,
-	fit_regression=True : bool, regression=linear_model.LinearRegression(), epsilon_exponent=-1e-3 : float,
-	use_same_exponent_weight=True : bool, min_value_avoid_zeros=1e-6 : float
+	fit_regression=True : bool, regression=linear_model.LinearRegression(), 
+	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
+	min_value_avoid_zeros: float=1e-5
 ):
 	''' Will be documented later on. '''
 
