@@ -1,6 +1,17 @@
 import numpy as np
 
 def compute_distance_matrix(coordinates, exponent=2 : float):
+	'''
+    The compute_distance_matrix function computes the distance between a list of coordinates.
+
+    Parameters:
+        coordinates (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
+        exponent (float): the exponent used in the norm (2 is the euclidien norm).
+
+	Returns:
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
+    '''
+
 	size, num_dimensions = len(coordinates[0]), len(coordinates)
 
 	distance_mat = np.zeros((size, size))
@@ -11,6 +22,21 @@ def compute_distance_matrix(coordinates, exponent=2 : float):
 	return distance_mat
 
 def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137  : float, unit="deg" : str):
+	'''
+	The compute_distance_matrix_polar function computes the distance between a list of coordinates from polar
+	coordinates on a sphere. by default it can be used for typical coordinates on earth.
+
+	Parameters:
+        latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
+        longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+        radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
+        unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
+        "arcmin", or "arcsec".
+
+	Returns:
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
+	'''
+
 	conversion_factor = {
 		"rad"    : 1,
 		"deg"    : np.pi/180,
@@ -31,6 +57,25 @@ def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137  : float
 	return distance_mat
 
 def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2 : float):
+	'''
+	The compute_unitary_direction_matrix function computes the matrix of unitary vectors used to computed
+	direction in the main functions.
+
+	Parameters:
+        coordinates (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
+        distance_mat (np.array): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance
+        	between each location. If not passed it will be computed and returned.
+        exponent (float): the exponent used in the norm (2 is the euclidien norm). If a distance matrix is passed, it
+        	must have been computed with the same exponent as the one passed to this function.
+	
+	Returns:
+		unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the
+			unitary vector between each location.
+		distance_mat (np.array): a distance matrix is returned if it was not passed as a parameter (to avoid
+			recomputing it), it is a 2d-array of shape (`size`, `size`) filled with the distance between
+			each location.
+	'''
+
 	size, num_dimensions = len(coordinates[0]), len(coordinates)
 	unitary_direction_matrix = np.zeros((num_dimensions, size, size))
 
@@ -48,6 +93,28 @@ def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2 
 	return unitary_direction_matrix
 
 def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius=6378137 : float, unit="deg" : str):
+	'''
+	The compute_unitary_direction_matrix_polar function computes the matrix of unitary vectors used to computed
+	direction in the main functions, between a list of coordinates from polar coordinates on a sphere. by default
+	it can be used for typical coordinates on earth.
+
+	Parameters:
+        latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
+        longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+        distance_mat (np.array): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance
+        	between each location. If not passed it will be computed and returned.
+        radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
+        unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
+        "arcmin", or "arcsec".
+	
+	Returns:
+		unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the
+			unitary vector between each location.
+		distance_mat (np.array): a distance matrix is returned if it was not passed as a parameter (to avoid
+			recomputing it), it is a 2d-array of shape (`size`, `size`) filled with the distance between
+			each location.
+	'''
+
 	size, num_dimensions = len(coordinates[0]), len(coordinates)
 
 	conversion_factor = {
