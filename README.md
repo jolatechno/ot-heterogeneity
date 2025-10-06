@@ -97,7 +97,7 @@ _The `ot_heterogeneity_linear_regression` function will be documented later on._
 ```python
 def ot_heterogeneity_linear_regression(
 	distrib, prediction_distrib, distance_mat, local_weight_distrib=None, unitary_direction_matrix=None,
-	fit_regression=True : bool, regression=linear_model.LinearRegression(), 
+	fit_regression : bool=True, regression=linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5
 )
