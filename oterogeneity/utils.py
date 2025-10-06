@@ -115,7 +115,7 @@ def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=N
 			each location.
 	'''
 
-	size = len(latitudes[0])
+	size = len(latitudes)
 
 	conversion_factor = {
 		"rad"    : 1,
