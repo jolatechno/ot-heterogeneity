@@ -115,7 +115,7 @@ def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=N
 			each location.
 	'''
 
-	size, num_dimensions = len(coordinates[0]), len(coordinates)
+	size = len(latitudes[0])
 
 	conversion_factor = {
 		"rad"    : 1,
@@ -129,7 +129,7 @@ def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=N
 	longitudes_left  = np.repeat(np.expand_dims(longitudes, axis=1), size, axis=1)*conversion_factor
 	longitudes_right = np.repeat(np.expand_dims(longitudes, axis=0), size, axis=0)*conversion_factor
 
-	unitary_direction_matrix = np.zeros((num_dimensions, size, size))
+	unitary_direction_matrix = np.zeros((2, size, size))
 
 	distance_mat_is_None = distance_mat is None
 	if distance_mat_is_None:
