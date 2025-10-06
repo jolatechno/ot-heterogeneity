@@ -140,16 +140,16 @@ def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=N
 	distance_mat_is_None = distance_mat is None
 	if distance_mat_is_None:
 		distance_mat = np.sqrt(
-			(latitudes_left - latitudes_right)**2 +
-			((latitudes_left - latitudes_right)**2)*np.sin(longitudes_left)*np.sin(longitudes_right)
+			(latitudes_left   - latitudes_right )**2 +
+			((longitudes_left - longitudes_right)**2)*np.sin(latitudes_left)*np.sin(latitudes_right)
 		) * radius
 
 	distance_mat_is_zero = distance_mat == 0
 	distance_mat[distance_mat_is_zero] = 1
 
-	unitary_direction_matrix[0, :] = (latitudes_left - latitudes_right) * radius / distance_mat
-	unitary_direction_matrix[1, :] = (latitudes_left - latitudes_right) * np.sqrt(np.sin(longitudes_left)*np.sin(longitudes_right)) * radius / distance_mat
-	
+	unitary_direction_matrix[0, :] = (latitudes_left  - latitudes_right ) * radius / distance_mat
+	unitary_direction_matrix[1, :] = (longitudes_left - longitudes_right) * np.sqrt(np.sin(latitudes_left)*np.sin(latitudes_right)) * radius / distance_mat
+
 	unitary_direction_matrix[:, distance_mat_is_zero] = 0
 	distance_mat[distance_mat_is_zero] = 0
 
