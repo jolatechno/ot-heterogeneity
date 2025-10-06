@@ -1,0 +1,23 @@
+[project]
+dynamic = ["version"]
+name = "oterogeneity"
+dependencies = [
+	"numpy",
+	"scikit-learn",
+	"pot"
+]
+requires-python = ">= 3.8"
+authors = [
+	{name = "Joseph Touzet", email = "joseph.touzet@ens-paris-saclay.fr"},
+	{name = "Xavier Bacon"}
+]
+maintainers = [
+	{name = "Joseph Touzet", email = "joseph.touzet@ens-paris-saclay.fr"}
+]
+description = "Python library to compute heterogeneity indexes based on optimal transport."
+keywords = ["optimal transport", "geography", "segregation", "spatial heterogeneity"]
+readme = "README.md"
+license = "CC Attribution 4.0"
+
+[project.urls]
+Repository = "https://github.com/jolatechno/ot-heterogeneity"

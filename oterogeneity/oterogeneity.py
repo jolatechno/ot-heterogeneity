@@ -4,7 +4,38 @@ from sklearn import linear_model
 from collections.abc import Iterable
 
 class ot_heterogeneity_results:
-	def __init__(self, size=0, num_categories=0, num_dimensions=1, has_direction=False):
+	'''
+    The ot_heterogeneity_results class contains all of
+    the results of a computation of spatial heterogeneity
+    based on optimal transport using our method.
+
+    Attributes:
+        size (int): Number of spatial units (town, polling stations, etc...)
+        num_categories (int): number of distinct categories
+        num_dimensions (int): number of spacial dimensions (tympically 2)
+        has_direction (bool): whether the result contains directionality fields or not
+        global_heterogeneity (float): global heterogeneity index
+        global_heterogeneity_per_category (np.array): 1d array of length `num_categories` that contains the local heterogeneity
+        	index for each category.
+        local_heterogeneity (np.array): 1d array of length `size` that contains the local heterogeneity index for each location
+        local_signed_heterogeneity (np.array): either a 2d-array of shape (`num_categories`, `size`) when `num_categories` > 1,
+        	or a 1d array of length `size` if `num_categories` = 1, that contains the signed heterogeneity index for each
+        	category and each location.
+		local_exiting_heterogeneity (np.array): 1d-array of length `size` that contains the heterogeneity index based only on
+			exiting flux for each location.
+		local_entering_heterogeneity (np.array): 1d-array of length `size` that contains the heterogeneity index based only on
+			entering flux for each location.
+		local_heterogeneity_per_category (np.array): 1d-array of length `size` that contains the heterogeneity index for each location.
+		local_exiting_heterogeneity_per_category (np.array): 2d-array of shape (`num_categories`, `size`) that contains the
+			heterogeneity index based only on exiting flux for each category and each location.
+		local_entering_heterogeneity_per_category (np.array): 2d-array of shape (`num_categories`, `size`) that contains the
+			heterogeneity index based only on entering flux for each category and each location.
+		direction (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the vectorial field of directionality.
+		direction_per_category (np.array): 3d-array of shape (`num_categories`, `num_dimensions`, `size`) representing the
+			vectorial field of directionality for each category.
+    '''
+
+	def __init__(self, size=0 : int, num_categories=0 : int, num_dimensions=1 : int, has_direction=False : bool):
 		if size <= 0:
 			self.size, self.num_categories, self.num_dimensions, self.has_direction = size, 0, num_dimensions, False
 			self.global_heterogeneity                      = None
@@ -41,7 +72,7 @@ class ot_heterogeneity_results:
 				self.local_entering_heterogeneity_per_category = None
 				self.direction_per_category                    = None
 			else:
-				self.global_heterogeneity_per_category         = np.zeros(                 size )
+				self.global_heterogeneity_per_category         = np.zeros( num_categories)
 				self.local_signed_heterogeneity                = np.zeros((num_categories, size))
 				self.local_heterogeneity_per_category          = np.zeros((num_categories, size))
 				self.local_exiting_heterogeneity_per_category  = np.zeros((num_categories, size))
@@ -53,11 +84,10 @@ class ot_heterogeneity_results:
 def ot_heterogeneity_from_null_distrib(
 	distrib, null_distrib, distance_mat,
 	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
-	alpha_exponent=None, epsilon_exponent=-1e-3,
-	use_same_exponent_weight=True, min_value_avoid_zeros=1e-5
+	epsilon_exponent=-1e-3 : float, use_same_exponent_weight=True : bool,
+	min_value_avoid_zeros=1e-5 : float
 ):
-	if alpha_exponent is None:
-		alpha_exponent = 1 + epsilon_exponent
+	alpha_exponent = 1 + epsilon_exponent
 	distance_mat_alpha = np.pow(distance_mat, alpha_exponent)
 
 	is_local_weights_1dimensional = not isinstance(local_weight_distrib[0], Iterable) if local_weight_distrib is not None else False
@@ -125,21 +155,21 @@ def ot_heterogeneity_from_null_distrib(
 
 def ot_heterogeneity_populations(
 	distrib, distance_mat, unitary_direction_matrix=None,
-	alpha_exponent=None, epsilon_exponent=-1e-3, use_same_exponent_weight=True, 
-	min_value_avoid_zeros=1e-6
+	epsilon_exponent=-1e-3 : float, use_same_exponent_weight=True : bool, 
+	min_value_avoid_zeros=1e-6 : float
 ):
 	null_distrib = np.sum(distrib, axis=0)
 
 	return ot_heterogeneity_from_null_distrib(
 		distrib, null_distrib, distance_mat, unitary_direction_matrix=unitary_direction_matrix,
-		alpha_exponent=alpha_exponent, epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
+		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
 		min_value_avoid_zeros=min_value_avoid_zeros
 	)
 
 def ot_heterogeneity_linear_regression(
 	distrib, prediction_distrib, distance_mat, local_weight_distrib=None, unitary_direction_matrix=None,
-	fit_regression=True, regression=linear_model.LinearRegression(), alpha_exponent=None,
-	epsilon_exponent=-1e-3, use_same_exponent_weight=True, min_value_avoid_zeros=1e-6
+	fit_regression=True : bool, regression=linear_model.LinearRegression(), epsilon_exponent=-1e-3 : float,
+	use_same_exponent_weight=True : bool, min_value_avoid_zeros=1e-6 : float
 ):
 	is_predict_distrib_1dimensional = not isinstance(prediction_distrib[0], Iterable)
 	is_distrib_1dimensional         = not isinstance(distrib[0],            Iterable)
@@ -163,6 +193,6 @@ def ot_heterogeneity_linear_regression(
 
 	return ot_heterogeneity_from_null_distrib(
 		distrib, null_distrib, distance_mat, local_weight_distrib=local_weight_distrib, unitary_direction_matrix=unitary_direction_matrix,
-		alpha_exponent=alpha_exponent, epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
+		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
 		min_value_avoid_zeros=min_value_avoid_zeros
 	), regression

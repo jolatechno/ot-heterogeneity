@@ -1,6 +1,6 @@
 import numpy as np
 
-def compute_distance_matrix(coordinates, exponent=2):
+def compute_distance_matrix(coordinates, exponent=2 : float):
 	size, num_dimensions = len(coordinates[0]), len(coordinates)
 
 	distance_mat = np.zeros((size, size))
@@ -10,7 +10,7 @@ def compute_distance_matrix(coordinates, exponent=2):
 
 	return distance_mat
 
-def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137, unit="deg"):
+def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137  : float, unit="deg" : str):
 	conversion_factor = {
 		"rad"    : 1,
 		"deg"    : np.pi/180,
@@ -30,7 +30,7 @@ def compute_distance_matrix_polar(latitudes, longitudes, radius=6378137, unit="d
 
 	return distance_mat
 
-def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2):
+def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2 : float):
 	size, num_dimensions = len(coordinates[0]), len(coordinates)
 	unitary_direction_matrix = np.zeros((num_dimensions, size, size))
 
@@ -47,7 +47,7 @@ def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent=2)
 		return unitary_direction_matrix, distance_mat
 	return unitary_direction_matrix
 
-def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius=6378137, unit="deg"):
+def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius=6378137 : float, unit="deg" : str):
 	size, num_dimensions = len(coordinates[0]), len(coordinates)
 
 	conversion_factor = {
