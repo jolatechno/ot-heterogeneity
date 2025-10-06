@@ -82,11 +82,17 @@ def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent: f
 	distance_mat_is_None = distance_mat is None
 	if distance_mat_is_None:
 		distance_mat = compute_distance_matrix(coordinates, exponent)
+
+	distance_mat_is_zero = distance_mat == 0
+	distance_mat[distance_mat_is_zero] = 1
 		
 	for dimension in range(num_dimensions):
 		unitary_direction_matrix[dimension, :, :] = (np.repeat(np.expand_dims(coordinates[dimension, :], axis=1), size, axis=1) - np.repeat(np.expand_dims(coordinates[dimension, :], axis=0), size, axis=0)) / distance_mat
 		for i in range(size):
 			unitary_direction_matrix[dimension, i, i] = 0
+
+	unitary_direction_matrix[:, distance_mat_is_zero] = 0
+	distance_mat[distance_mat_is_zero] = 0
 
 	if distance_mat_is_None:
 		return unitary_direction_matrix, distance_mat
@@ -138,8 +144,14 @@ def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=N
 			((latitudes_left - latitudes_right)**2)*np.sin(longitudes_left)*np.sin(longitudes_right)
 		) * radius
 
+	distance_mat_is_zero = distance_mat == 0
+	distance_mat[distance_mat_is_zero] = 1
+
 	unitary_direction_matrix[0, :] = (latitudes_left - latitudes_right) * radius / distance_mat
 	unitary_direction_matrix[1, :] = (latitudes_left - latitudes_right) * np.sqrt(np.sin(longitudes_left)*np.sin(longitudes_right)) * radius / distance_mat
+	
+	unitary_direction_matrix[:, distance_mat_is_zero] = 0
+	distance_mat[distance_mat_is_zero] = 0
 
 	if distance_mat_is_None:
 		return unitary_direction_matrix, distance_mat
