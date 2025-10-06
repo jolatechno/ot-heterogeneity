@@ -1,5 +1,6 @@
 [project]
-dynamic = ["version"]
+#dynamic = ["version"] # didn't properly use it !
+version="0.1.7"
 name = "oterogeneity"
 dependencies = [
 	"numpy",
