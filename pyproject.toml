@@ -17,7 +17,7 @@ maintainers = [
 description = "Python library to compute heterogeneity indexes based on optimal transport."
 keywords = ["optimal transport", "geography", "segregation", "spatial heterogeneity"]
 readme = "README.md"
-license = "CC Attribution 4.0"
+license = { text = "CC Attribution 4.0" }
 
 [project.urls]
 Repository = "https://github.com/jolatechno/ot-heterogeneity"
