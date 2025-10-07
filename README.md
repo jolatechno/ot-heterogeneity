@@ -47,8 +47,8 @@ The `ot_heterogeneity_from_null_distrib` function is the most general function i
 def ot_heterogeneity_from_null_distrib(
 	distrib, null_distrib, distance_mat,
 	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
-	epsilon_exponent=-1e-3 : float, use_same_exponent_weight=True : bool,
-	min_value_avoid_zeros=1e-5 : float
+	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
+	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
 ```
 
@@ -74,11 +74,10 @@ The function returns a result as an object of class `ot_heterogeneity_results`.
 The `ot_heterogeneity_populations` function uses the total population distribution accross all classes as the null distribution. It thus assumes the nul distribution is the distribution where the total population at each location doesn't change, and the proportion of each category is the same as the global distribution of classes.
 
 ```python
-def ot_heterogeneity_from_null_distrib(
-	distrib, null_distrib, distance_mat,
-	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
+def ot_heterogeneity_populations(
+	distrib, distance_mat, unitary_direction_matrix=None,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5
+	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
 ```
 
@@ -105,7 +104,7 @@ def ot_heterogeneity_linear_regression(
 	distrib, prediction_distrib, distance_mat, local_weight_distrib=None, unitary_direction_matrix=None,
 	fit_regression : bool=True, regression=linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5
+	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
 ```
 
