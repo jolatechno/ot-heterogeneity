@@ -10,8 +10,10 @@ The librairy can simply be installed using `pip install oterogeneity` and then i
 import oterogeneity as oth
 from oterogeneity import utils
 
-unitary_direction_matrix, distance = utils.compute_distance_matrix_polar(lat, lon)
-results = oth.ot_heterogeneity_populations(distrib_canidates, distance_matrix, unitary_direction_matrix, compute_direction=True)
+unitary_direction_matrix, distance = utils.compute_unitary_direction_matrix_polar(lat, lon)
+results = oth.ot_heterogeneity_populations(
+	distrib_canidates, distance_matrix, unitary_direction_matrix
+)
 ```
 
 ### 1.a - The result class
@@ -59,9 +61,11 @@ With the following parameters being optional :
  - `unitary_direction_matrix` (_`np.array`_): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary vector between each location.
  - `local_weight_distrib` (_`np.array`_): 1d-array of length `size` representing the weight for each location. By default this weight is simply the proportion of the total population located in each location.
  - `category_weights` (_`np.array`_): 1d-array of length `num_categories` representing the weight for each num_category. By default this weight is simply the proportion of the total population that belong to each category.
- - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
+ - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
  - `min_value_avoid_zeros` (_`float`_): value below wich a value is concidered zero.
+ - `ot_emb_args` (_`list`_): list of additional unamed argument to pass to the `ot.emb` function that is used as a backend.
+ - `ot_emb_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.emb` function that is used as a backend.
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
@@ -84,9 +88,11 @@ The following parameters are passed to the function :
 
 With the following parameters being optional :
  - `unitary_direction_matrix` (_`np.array`_): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary vector between each location.
- - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
+ - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
  - `min_value_avoid_zeros` (_`float`_): value below wich a value is concidered zero.
+ - `ot_emb_args` (_`list`_): list of additional unamed argument to pass to the `ot.emb` function that is used as a backend.
+ - `ot_emb_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.emb` function that is used as a backend.
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 

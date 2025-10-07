@@ -84,7 +84,7 @@ def ot_heterogeneity_from_null_distrib(
 	distrib, null_distrib, distance_mat,
 	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5
+	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 ):
 	'''
     The ot_heterogeneity_from_null_distrib function is the most general function implementing our method for measuring
@@ -107,6 +107,8 @@ def ot_heterogeneity_from_null_distrib(
         use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
         	for the cost matrix in the optimal-transport computation.
         min_value_avoid_zeros (float): value below wich a value is concidered zero.
+        ot_emb_args (list): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
+        ot_emb_kwargs (dict): list of additional amed argument to pass to the ot.emb function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)
@@ -137,7 +139,7 @@ def ot_heterogeneity_from_null_distrib(
 		normalized_distrib_this_category      = distrib / np.sum(distrib) if is_distrib_1dimensional else distrib[category] / np.sum(distrib[category])
 		normalized_null_distrib_this_category = null_distrib / np.sum(null_distrib) if is_null_distrib_1dimensional else null_distrib[category] / np.sum(null_distrib[category])
 
-		category_ot_result  = ot.emd(normalized_null_distrib_this_category, normalized_distrib_this_category, distance_mat_alpha)
+		category_ot_result  = ot.emd(normalized_null_distrib_this_category, normalized_distrib_this_category, distance_mat_alpha, *ot_emb_args, **ot_emb_kwargs)
 		category_ot_result *= distance_mat_alpha if use_same_exponent_weight else distance_mat
 
 		local_exiting_heterogeneity_this_category  = category_ot_result.sum(axis=0) / local_weight_distrib
@@ -181,7 +183,7 @@ def ot_heterogeneity_from_null_distrib(
 def ot_heterogeneity_populations(
 	distrib, distance_mat, unitary_direction_matrix=None,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5
+	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 ):
 	'''
     The ot_heterogeneity_populations function uses the total population distribution accross all classes as the null
@@ -198,6 +200,8 @@ def ot_heterogeneity_populations(
         use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
         	for the cost matrix in the optimal-transport computation.
         min_value_avoid_zeros (float): value below wich a value is concidered zero.
+        ot_emb_args (list): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
+        ot_emb_kwargs (dict): list of additional amed argument to pass to the ot.emb function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)
@@ -208,14 +212,14 @@ def ot_heterogeneity_populations(
 	return ot_heterogeneity_from_null_distrib(
 		distrib, null_distrib, distance_mat, unitary_direction_matrix=unitary_direction_matrix,
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
-		min_value_avoid_zeros=min_value_avoid_zeros
+		min_value_avoid_zeros=min_value_avoid_zeros, ot_emb_args=ot_emb_args, ot_emb_kwargs=ot_emb_kwargs
 	)
 
 def ot_heterogeneity_linear_regression(
 	distrib, prediction_distrib, distance_mat, local_weight_distrib=None, unitary_direction_matrix=None,
 	fit_regression : bool=True, regression=linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5
+	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 ):
 	''' Will be documented later on. '''
 
@@ -242,5 +246,5 @@ def ot_heterogeneity_linear_regression(
 	return ot_heterogeneity_from_null_distrib(
 		distrib, null_distrib, distance_mat, local_weight_distrib=local_weight_distrib, unitary_direction_matrix=unitary_direction_matrix,
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
-		min_value_avoid_zeros=min_value_avoid_zeros
+		min_value_avoid_zeros=min_value_avoid_zeros, ot_emb_args=ot_emb_args, ot_emb_kwargs=ot_emb_kwargs
 	), regression
