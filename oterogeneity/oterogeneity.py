@@ -11,7 +11,7 @@ class ot_heterogeneity_results:
     Attributes:
         size (int): Number of spatial units (town, polling stations, etc...)
         num_categories (int): number of distinct categories
-        num_dimensions (int): number of spacial dimensions (tympically 2)
+        num_dimensions (int): number of spacial dimensions (typically 2)
         has_direction (bool): whether the result contains directionality fields or not
         global_heterogeneity (float): global heterogeneity index
         global_heterogeneity_per_category (np.array): 1d-array of length `num_categories` that contains the local heterogeneity

@@ -23,7 +23,7 @@ The `ot_heterogeneity_results` class contains all of the results of a computatio
 It contains the following attributes (that may be `None` if not applicable) :
  - `size` (_`int`_): Number of spatial units (town, polling stations, etc...)
  - `num_categories` (_`int`_): number of distinct categories
- - `num_dimensions` (_`int`_): number of spacial dimensions (tympically 2)
+ - `num_dimensions` (_`int`_): number of spacial dimensions (typically 2)
  - `has_direction` (_`bool`_): whether the result contains directionality fields or not
  - `global_heterogeneity` (_`float`_): global heterogeneity index
  - `global_heterogeneity_per_category` (_`np.array`_): 1d-array of length `num_categories` that contains the local heterogeneity index for each category.
