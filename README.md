@@ -110,6 +110,17 @@ def ot_heterogeneity_linear_regression(
 
 ### 1.c - Utility functions
 
+The utility functions are located in the `utils` package, so they should be used from this subpackage :
+
+```python
+import oterogeneity as oth
+from oterogeneity import utils
+
+unitary_direction_matrix, distance = utils.compute_unitary_direction_matrix_polar(lat, lon)
+# Or :
+unitary_direction_matrix, distance = oth.utils.compute_unitary_direction_matrix_polar(lat, lon)
+```
+
 #### 1.c.1 - `compute_distance_matrix`
 
 The `compute_distance_matrix` function computes the distance between a list of coordinates.
