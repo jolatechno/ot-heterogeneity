@@ -1,2 +1,2 @@
 from .oterogeneity import *
-import utils
+from . import utils
