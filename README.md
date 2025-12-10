@@ -46,6 +46,7 @@ The `ot_heterogeneity_from_null_distrib` function is the most general function i
 ```python
 def ot_heterogeneity_from_null_distrib(
 	distrib, null_distrib, distance_mat,
+	transport_plane=None, return_transport_plane: bool=False,
 	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
@@ -58,6 +59,8 @@ The following parameters are passed to the function :
  - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
 With the following parameters being optional :
+ - `transport_plane` (_`np.array`_): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+ - `return_transport_plane` (_`bool`_): if true, the function will also return the transport plane.
  - `unitary_direction_matrix` (_`np.array`_): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary vector between each location.
  - `local_weight_distrib` (_`np.array`_): 1d-array of length `size` representing the weight for each location. By default this weight is simply the proportion of the total population located in each location.
  - `category_weights` (_`np.array`_): 1d-array of length `num_categories` representing the weight for each num_category. By default this weight is simply the proportion of the total population that belong to each category.
@@ -69,13 +72,18 @@ With the following parameters being optional :
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
+If `return_transport_plane` is true, the function also returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+
+If `return_transport_plane` is true, the function also returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+
 #### 1.b.2 - `ot_heterogeneity_populations`
 
 The `ot_heterogeneity_populations` function uses the total population distribution accross all classes as the null distribution. It thus assumes the nul distribution is the distribution where the total population at each location doesn't change, and the proportion of each category is the same as the global distribution of classes.
 
 ```python
 def ot_heterogeneity_populations(
-	distrib, distance_mat, unitary_direction_matrix=None,
+	distrib, distance_mat, total_population_distrib=None, unitary_direction_matrix=None,
+	transport_plane=None, return_transport_plane: bool=False,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
@@ -86,6 +94,8 @@ The following parameters are passed to the function :
  - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
 With the following parameters being optional :
+ - `transport_plane` (_`np.array`_): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+ - `return_transport_plane` (_`bool`_): if true, the function will also return the transport plane.
  - `unitary_direction_matrix` (_`np.array`_): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary vector between each location.
  - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
@@ -95,14 +105,17 @@ With the following parameters being optional :
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
+If `return_transport_plane` is true, the function also returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+
 #### 1.b.1 - `ot_heterogeneity_linear_regression`
 
 _The `ot_heterogeneity_linear_regression` function will be documented later on._
 
 ```python
 def ot_heterogeneity_linear_regression(
-	distrib, prediction_distrib, distance_mat, local_weight_distrib=None, unitary_direction_matrix=None,
-	fit_regression : bool=True, regression=linear_model.LinearRegression(), 
+	distrib, prediction_distrib, distance_mat, local_weight_distrib=None,
+	transport_plane=None, return_transport_plane: bool=False, unitary_direction_matrix=None,
+	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
@@ -121,7 +134,25 @@ unitary_direction_matrix, distance = utils.compute_unitary_direction_matrix_pola
 unitary_direction_matrix, distance = oth.utils.compute_unitary_direction_matrix_polar(lat, lon)
 ```
 
-#### 1.c.1 - `compute_distance_matrix`
+#### 1.c.1 - `compute_optimal_transport_flux`
+
+```python
+def compute_optimal_transport_flux(
+	distributions_to, distributions_from, distance_mat,
+	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+)
+```
+
+The `compute_optimal_transport_flux` function computes the distance between a list of coordinates.
+ - `distributions_to` (_`np.array`_): 2d-array of shape (`num_dimensions`, `size`) or 1d-array of length `size` representing the end distribution of population.
+ - `distributions_from` (_`np.array`_): 2d-array of shape (`num_dimensions`, `size`) or 1d-array of length `size` representing the starting distribution of population that will be transported to `distributions_to`.
+ - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) filled with the distance between each location.
+ - `ot_emb_args` (_`list`_): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
+ - `ot_emb_kwargs` (_`dict`_): list of additional amed argument to pass to the ot.emb function that is used as a backend.
+
+It returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+
+#### 1.c.2 - `compute_distance_matrix`
 
 The `compute_distance_matrix` function computes the distance between a list of coordinates.
 
@@ -135,7 +166,7 @@ The `compute_distance_matrix` function takes the following parameters :
 
 It returns the distance matrix filled with the distance between each location.
 
-#### 1.c.2 - `compute_distance_matrix_polar`
+#### 1.c.3 - `compute_distance_matrix_polar`
 
 The `compute_distance_matrix_polar` function computes the distance between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
@@ -151,7 +182,7 @@ The `compute_distance_matrix` function takes the following parameters :
 
 It returns the distance matrix filled with the distance between each location.
 
-#### 1.c.3 - `compute_unitary_direction_matrix`
+#### 1.c.4 - `compute_unitary_direction_matrix`
 
 The `compute_unitary_direction_matrix` function computes the matrix of unitary vectors used to computed direction in the main functions.
 
@@ -168,7 +199,7 @@ It returns the following values :
  - `unitary_direction_matrix` (_`np.array`_): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary vector between each location.
  - `distance_mat` (_`np.array`_): a distance matrix is returned if it was not passed as a parameter (to avoid recomputing it), it is a 2d-array of shape (`size`, `size`) filled with the distance between each location.
 
-#### 1.c.4 - `compute_unitary_direction_matrix_polar`
+#### 1.c.5 - `compute_unitary_direction_matrix_polar`
 
 The `compute_unitary_direction_matrix_polar` function computes the matrix of unitary vectors used to computed direction in the main functions, between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 

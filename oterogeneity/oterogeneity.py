@@ -119,8 +119,8 @@ def ot_heterogeneity_from_null_distrib(
 	Returns:
 		results (ot_heterogeneity_results)
 		transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
-			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
-			the flux of population n from locality i to locality j.
+			of shape (`size`, `size`) if distrib is only 1d. Element of index (n, i, j) reprensents the flux
+			of population n from locality i to locality j. Returned only if return_transport_plane is true.
     '''
 
 	is_local_weights_1dimensional = not isinstance(local_weight_distrib[0], collections.abc.Iterable) if local_weight_distrib is not None else False
@@ -241,6 +241,9 @@ def ot_heterogeneity_populations(
 
 	Returns:
 		results (ot_heterogeneity_results)
+		transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+			of shape (`size`, `size`) if distrib is only 1d. Element of index (n, i, j) reprensents the flux
+			of population n from locality i to locality j. Returned only if return_transport_plane is true.
     '''
 
 	if total_population_distrib is None:
