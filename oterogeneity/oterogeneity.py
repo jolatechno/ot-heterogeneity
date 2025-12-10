@@ -1,8 +1,8 @@
 import ot
 import numpy as np
-from sklearn import linear_model 
-from collections.abc import Iterable
-from .utils import compute_optimal_transport_flux
+import sklearn
+import collections
+from . import utils
 
 class ot_heterogeneity_results:
 	'''
@@ -123,9 +123,9 @@ def ot_heterogeneity_from_null_distrib(
 			the flux of population n from locality i to locality j.
     '''
 
-	is_local_weights_1dimensional = not isinstance(local_weight_distrib[0], Iterable) if local_weight_distrib is not None else False
-	is_null_distrib_1dimensional  = not isinstance(null_distrib[0],         Iterable)
-	is_distrib_1dimensional       = not isinstance(distrib[0],              Iterable)
+	is_local_weights_1dimensional = not isinstance(local_weight_distrib[0], collections.abc.Iterable) if local_weight_distrib is not None else False
+	is_null_distrib_1dimensional  = not isinstance(null_distrib[0],         collections.abc.Iterable)
+	is_distrib_1dimensional       = not isinstance(distrib[0],              collections.abc.Iterable)
 
 	num_categories = 1 if is_distrib_1dimensional else len(distrib)
 	size           = len(distrib) if is_distrib_1dimensional else len(distrib[0])
@@ -159,7 +159,7 @@ def ot_heterogeneity_from_null_distrib(
 			for category in range(num_categories):
 				distrib_from[category] = distrib[category] / np.sum(distrib[category])
 
-		transport_plane = compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_emb_args=ot_emb_args, ot_emb_kwargs=ot_emb_kwargs)
+		transport_plane = utils.compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_emb_args=ot_emb_args, ot_emb_kwargs=ot_emb_kwargs)
 
 	for category in range(num_categories):
 		weight_this_category                  = np.sum(distrib[category]) if category_weights is None else category_weights[category]
@@ -208,7 +208,7 @@ def ot_heterogeneity_from_null_distrib(
 
 
 def ot_heterogeneity_populations(
-	distrib, distance_mat, unitary_direction_matrix=None,
+	distrib, distance_mat, total_population_distrib=None, unitary_direction_matrix=None,
 	transport_plane=None, return_transport_plane: bool=False,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
@@ -219,9 +219,13 @@ def ot_heterogeneity_populations(
     doesn't change, and the proportion of each category is the same as the global distribution of classes.
 
     Parameters:
-        distrib (np.array): 2d-array of shape (`num_categories`, `size`) representing the population distribution, i.e. the
-        	population of each category in each location.
+        distrib (np.array): 2d-array of shape (`num_categories`, `size`) or 1d-array of length `size` representing the
+        	population distribution, i.e. the population of each category in each location. A 1d array requires 
+        	`total_population_distrib` to be passed.
         distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
+        total_population_distrib (np.array): 1d-array of length `size` representing the population at each locality,
+        	usefull to compute the heterogeneity of one or multiple small group within a larger population, while
+        	ignoring the majority that is outside of these small groups.
         transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
 			the flux of population n from locality i to locality j.
@@ -239,7 +243,10 @@ def ot_heterogeneity_populations(
 		results (ot_heterogeneity_results)
     '''
 
-	null_distrib = np.sum(distrib, axis=0)
+	if total_population_distrib is None:
+		null_distrib = np.sum(distrib, axis=0)
+	else:
+		null_distrib = total_population_distrib / np.sum(total_population_distrib) * np.sum(distrib)
 
 	return ot_heterogeneity_from_null_distrib(
 		distrib, null_distrib, distance_mat, transport_plane=transport_plane,
@@ -251,14 +258,14 @@ def ot_heterogeneity_populations(
 def ot_heterogeneity_linear_regression(
 	distrib, prediction_distrib, distance_mat, local_weight_distrib=None,
 	transport_plane=None, return_transport_plane: bool=False, unitary_direction_matrix=None,
-	fit_regression : bool=True, regression=linear_model.LinearRegression(), 
+	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 ):
 	''' Will be documented later on. '''
 
-	is_predict_distrib_1dimensional = not isinstance(prediction_distrib[0], Iterable)
-	is_distrib_1dimensional         = not isinstance(distrib[0],            Iterable)
+	is_predict_distrib_1dimensional = not isinstance(prediction_distrib[0], collections.abc.Iterable)
+	is_distrib_1dimensional         = not isinstance(distrib[0],            collections.abc.Iterable)
 
 	num_categories = 1 if is_distrib_1dimensional else len(distrib)
 	size           = len(distrib) if is_distrib_1dimensional else len(distrib[0])

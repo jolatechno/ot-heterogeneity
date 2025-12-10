@@ -1,5 +1,6 @@
 import numpy as np
 import ot
+import collections
 
 def compute_optimal_transport_flux(
 	distributions_to, distributions_from, distance_mat,
@@ -23,7 +24,9 @@ def compute_optimal_transport_flux(
 			the flux of population n from locality i to locality j.
 	'''
 
-	is_distributions_from_1d, is_distributions_to_1d = len(distributions_from.shape) == 1, len(distributions_to.shape) == 1
+	is_distributions_from_1d = not isinstance(distributions_from[0], collections.abc.Iterable)
+	is_distributions_to_1d   = not isinstance(distributions_to[0],   collections.abc.Iterable)
+
 	if is_distributions_from_1d == 1:
 		size, num_dimensions = len(distributions_from), 1
 	else:
