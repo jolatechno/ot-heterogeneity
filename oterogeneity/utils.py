@@ -1,4 +1,44 @@
 import numpy as np
+import ot
+
+def compute_optimal_transport_flux(
+	distributions_to, distributions_from, distance_mat,
+	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+):
+	'''
+	The compute_distance_matrix function computes the distance between a list of coordinates.
+
+    Parameters:
+        distributions_to (np.array): 2d-array of shape (`num_dimensions`, `size`) or 1d-array of length `size`
+        	representing the end distribution of population.
+        distributions_from (np.array): 2d-array of shape (`num_dimensions`, `size`) or 1d-array of length `size`
+        	representing the starting distribution of population that will be transported to distributions_to.
+        distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
+        ot_emb_args (list): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
+        ot_emb_kwargs (dict): list of additional amed argument to pass to the ot.emb function that is used as a backend.
+
+	Returns:
+		transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
+			the flux of population n from locality i to locality j.
+	'''
+
+	is_distributions_from_1d, is_distributions_to_1d = len(distributions_from.shape) == 1, len(distributions_to.shape) == 1
+	if is_distributions_from_1d == 1:
+		size, num_dimensions = len(distributions_from), 1
+	else:
+		size, num_dimensions = len(distributions_from[0]), len(distributions_from)
+
+	transport_plane = np.zeros((num_dimensions, size, size)) if not is_distributions_from_1d else np.zeros((num_dimensions, size, size))
+
+	if is_distributions_from_1d:
+		transport_plane = ot.emd(distributions_to if is_distributions_to_1d else distributions_to[0], distributions_from, distance_mat, *ot_emb_args, **ot_emb_kwargs)
+	else:
+		for dimension in range(num_dimensions):
+			transport_plane[dimension, :, :] = ot.emd(distributions_to if is_distributions_to_1d else distributions_to[dimension], distributions_from[dimension], distance_mat, *ot_emb_args, **ot_emb_kwargs)
+
+	return transport_plane
+
 
 def compute_distance_matrix(coordinates, exponent: float=2):
 	'''
