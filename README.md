@@ -12,7 +12,7 @@ from oterogeneity import utils
 
 unitary_direction_matrix, distance = utils.compute_unitary_direction_matrix_polar(lat, lon)
 results = oth.ot_heterogeneity_populations(
-	distrib_canidates, distance_matrix, unitary_direction_matrix
+	distrib_canidates, distance_matrix, unitary_direction_matrix=unitary_direction_matrix
 )
 ```
 
