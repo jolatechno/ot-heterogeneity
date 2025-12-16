@@ -45,9 +45,9 @@ The `ot_heterogeneity_from_null_distrib` function is the most general function i
 
 ```python
 def ot_heterogeneity_from_null_distrib(
-	distrib, null_distrib, distance_mat,
-	transport_plane=None, return_transport_plane: bool=False,
-	unitary_direction_matrix=None, local_weight_distrib=None, category_weights=None,
+	distrib: np.array, null_distrib: np.array, distance_mat: np.array,
+	transport_plane: np.array=None, return_transport_plane: bool=False,
+	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None, category_weights: np.array=None,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
@@ -82,8 +82,8 @@ The `ot_heterogeneity_populations` function uses the total population distributi
 
 ```python
 def ot_heterogeneity_populations(
-	distrib, distance_mat, total_population_distrib=None, unitary_direction_matrix=None,
-	transport_plane=None, return_transport_plane: bool=False,
+	distrib, distance_mat: np.array, total_population_distrib: np.array=None, unitary_direction_matrix: np.array=None,
+	transport_plane: np.array=None, return_transport_plane: bool=False,
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
@@ -113,8 +113,8 @@ _The `ot_heterogeneity_linear_regression` function will be documented later on._
 
 ```python
 def ot_heterogeneity_linear_regression(
-	distrib, prediction_distrib, distance_mat, local_weight_distrib=None,
-	transport_plane=None, return_transport_plane: bool=False, unitary_direction_matrix=None,
+	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array, local_weight_distrib: np.array=None,
+	transport_plane: np.array=None, return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
 	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
@@ -138,7 +138,7 @@ unitary_direction_matrix, distance = oth.utils.compute_unitary_direction_matrix_
 
 ```python
 def compute_optimal_transport_flux(
-	distributions_to, distributions_from, distance_mat,
+	distributions_to: np.array, distributions_from: np.array, distance_mat: np.array,
 	ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
 ```
@@ -157,7 +157,7 @@ It returns the transport plane (np.array) which is either a 3d array of shape (`
 The `compute_distance_matrix` function computes the distance between a list of coordinates.
 
 ```python
-def compute_distance_matrix(coordinates, exponent: float=2)
+def compute_distance_matrix(coordinates: np.array, exponent: float=2)
 ```
 
 The `compute_distance_matrix` function takes the following parameters :
@@ -171,7 +171,7 @@ It returns the distance matrix filled with the distance between each location.
 The `compute_distance_matrix_polar` function computes the distance between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
 ```python
-def compute_distance_matrix_polar(latitudes, longitudes, radius: float=6378137, unit: str="deg")
+def compute_distance_matrix_polar(latitudes: np.array, longitudes: np.array, radius: float=6378137, unit: str="deg")
 ```
 
 The `compute_distance_matrix` function takes the following parameters :
@@ -187,7 +187,7 @@ It returns the distance matrix filled with the distance between each location.
 The `compute_unitary_direction_matrix` function computes the matrix of unitary vectors used to computed direction in the main functions.
 
 ```python
-def compute_unitary_direction_matrix(coordinates, distance_mat=None, exponent: float=2)
+def compute_unitary_direction_matrix(coordinates: np.array, distance_mat: np.array=None, exponent: float=2)
 ```
 
 The `compute_unitary_direction_matrix` function takes the following parameters :
@@ -204,7 +204,7 @@ It returns the following values :
 The `compute_unitary_direction_matrix_polar` function computes the matrix of unitary vectors used to computed direction in the main functions, between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
 ```python
-def compute_unitary_direction_matrix_polar(latitudes, longitudes, distance_mat=None, radius: float=6378137, unit: str="deg")
+def compute_unitary_direction_matrix_polar(latitudes: np.array, longitudes: np.array, distance_mat: np.array=None, radius: float=6378137, unit: str="deg")
 ```
 
 The `compute_unitary_direction_matrix_polar` function takes the following parameters :
