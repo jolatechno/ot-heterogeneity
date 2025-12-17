@@ -47,9 +47,10 @@ The `ot_heterogeneity_from_null_distrib` function is the most general function i
 def ot_heterogeneity_from_null_distrib(
 	distrib: np.array, null_distrib: np.array, distance_mat: np.array,
 	transport_plane: np.array=None, return_transport_plane: bool=False,
-	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None, category_weights: np.array=None,
-	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None,
+	category_weights: np.array=None, epsilon_exponent: float=-1e-3,
+	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
+	ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
 ```
 
@@ -82,10 +83,11 @@ The `ot_heterogeneity_populations` function uses the total population distributi
 
 ```python
 def ot_heterogeneity_populations(
-	distrib, distance_mat: np.array, total_population_distrib: np.array=None, unitary_direction_matrix: np.array=None,
-	transport_plane: np.array=None, return_transport_plane: bool=False,
-	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	distrib, distance_mat: np.array, total_population_distrib: np.array=None,
+	unitary_direction_matrix: np.array=None, transport_plane: np.array=None,
+	return_transport_plane: bool=False, epsilon_exponent: float=-1e-3,
+	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
+	ot_emb_args : list=[], ot_emb_kwargs : dict={}
 )
 ```
 
@@ -113,8 +115,9 @@ _The `ot_heterogeneity_linear_regression` function will be documented later on._
 
 ```python
 def ot_heterogeneity_linear_regression(
-	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array, local_weight_distrib: np.array=None,
-	transport_plane: np.array=None, return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
+	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array,
+	local_weight_distrib: np.array=None, transport_plane: np.array=None,
+	return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
 	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
@@ -129,9 +132,9 @@ The utility functions are located in the `utils` package, so they should be used
 import oterogeneity as oth
 from oterogeneity import utils
 
-unitary_direction_matrix, distance = utils.compute_unitary_direction_matrix_polar(lat, lon)
+unitary_dir_ma, distance_mat  = utils.compute_unitary_direction_matrix_polar(lat, lon)
 # Or :
-unitary_direction_matrix, distance = oth.utils.compute_unitary_direction_matrix_polar(lat, lon)
+unitary_dir_mat, distance_mat = oth.utils.compute_unitary_direction_matrix_polar(lat, lon)
 ```
 
 #### 1.c.1 - `compute_optimal_transport_flux`
@@ -146,6 +149,8 @@ def compute_optimal_transport_flux(
 The `compute_optimal_transport_flux` function computes the distance between a list of coordinates.
  - `distributions_to` (_`np.array`_): 2d-array of shape (`num_dimensions`, `size`) or 1d-array of length `size` representing the end distribution of population.
  - `distributions_from` (_`np.array`_): 2d-array of shape (`num_dimensions`, `size`) or 1d-array of length `size` representing the starting distribution of population that will be transported to `distributions_to`.
+
+With the following parameters being optional :
  - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) filled with the distance between each location.
  - `ot_emb_args` (_`list`_): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
  - `ot_emb_kwargs` (_`dict`_): list of additional amed argument to pass to the ot.emb function that is used as a backend.
@@ -162,6 +167,8 @@ def compute_distance_matrix(coordinates: np.array, exponent: float=2)
 
 The `compute_distance_matrix` function takes the following parameters :
  - `coordinates` (_`np.array`_): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
+
+With the following parameters being optional :
  - `exponent` (_`float`_): the exponent used in the norm (2 is the euclidien norm).
 
 It returns the distance matrix filled with the distance between each location.
@@ -171,12 +178,17 @@ It returns the distance matrix filled with the distance between each location.
 The `compute_distance_matrix_polar` function computes the distance between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
 ```python
-def compute_distance_matrix_polar(latitudes: np.array, longitudes: np.array, radius: float=6378137, unit: str="deg")
+def compute_distance_matrix_polar(
+	latitudes: np.array, longitudes: np.array,
+	radius: float=6378137, unit: str="deg"
+)
 ```
 
 The `compute_distance_matrix` function takes the following parameters :
  - `latitudes` (_`np.array`_): 1d-array of length `size` with the latitudes of each point.
  - `longitudes` (_`np.array`_): 1d-array of length `size` with the longitudes of each point.
+
+With the following parameters being optional :
  - `radius` (_`float`_): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
  - `unit` (_`str`_): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default), "arcmin", or "arcsec".
 
@@ -187,11 +199,16 @@ It returns the distance matrix filled with the distance between each location.
 The `compute_unitary_direction_matrix` function computes the matrix of unitary vectors used to computed direction in the main functions.
 
 ```python
-def compute_unitary_direction_matrix(coordinates: np.array, distance_mat: np.array=None, exponent: float=2)
+def compute_unitary_direction_matrix(
+	coordinates: np.array, distance_mat: np.array=None,
+	exponent: float=2
+)
 ```
 
 The `compute_unitary_direction_matrix` function takes the following parameters :
  - `coordinates` (_`np.array`_): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
+
+With the following parameters being optional :
  - `distance_mat` (_`np.array`_): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance between each location. If not passed it will be computed and returned.
  - `exponent` (_`float`_): the exponent used in the norm (2 is the euclidien norm). If a distance matrix is passed, it must have been computed with the same exponent as the one passed to this function.
 	
@@ -204,12 +221,17 @@ It returns the following values :
 The `compute_unitary_direction_matrix_polar` function computes the matrix of unitary vectors used to computed direction in the main functions, between a list of coordinates from polar coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
 ```python
-def compute_unitary_direction_matrix_polar(latitudes: np.array, longitudes: np.array, distance_mat: np.array=None, radius: float=6378137, unit: str="deg")
+def compute_unitary_direction_matrix_polar(
+	latitudes: np.array, longitudes: np.array,
+	distance_mat: np.array=None, radius: float=6378137, unit: str="deg"
+)
 ```
 
 The `compute_unitary_direction_matrix_polar` function takes the following parameters :
  - `latitudes` (_`np.array`_): 1d-array of length `size` with the latitudes of each point.
  - `longitudes` (_`np.array`_): 1d-array of length `size` with the longitudes of each point.
+
+With the following parameters being optional :
  - `radius` (_`float`_): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
  - `distance_mat` (_`np.array`_): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance between each location. If not passed it will be computed and returned.
  - `unit` (_`str`_): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default), "arcmin", or "arcsec".

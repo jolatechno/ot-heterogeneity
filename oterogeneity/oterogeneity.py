@@ -84,9 +84,10 @@ class ot_heterogeneity_results:
 def ot_heterogeneity_from_null_distrib(
 	distrib: np.array, null_distrib: np.array, distance_mat: np.array,
 	transport_plane: np.array=None, return_transport_plane: bool=False,
-	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None, category_weights: np.array=None,
-	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None,
+	category_weights: np.array=None, epsilon_exponent: float=-1e-3,
+	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
+	ot_emb_args : list=[], ot_emb_kwargs : dict={}
 ):
 	'''
     The ot_heterogeneity_from_null_distrib function is the most general function implementing our method for measuring
@@ -99,6 +100,8 @@ def ot_heterogeneity_from_null_distrib(
         	every category has the same null distribution, representing the null distribution (distribution without
         	heterogeneity), to which the distribution will be compared.
         distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
+
+    Optional parameters:
         transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
 			the flux of population n from locality i to locality j.
@@ -146,7 +149,6 @@ def ot_heterogeneity_from_null_distrib(
 			assert transport_plane.shape == (num_categories, size, size), f"The transport plane (transport_plane) passed must be of shape ({ num_categories }, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plane.shape }"
 	if unitary_direction_matrix is not None:
 		assert unitary_direction_matrix.shape == (num_dimensions, size, size), f"The unitary direction matrix (unitary_direction_matrix) passed must be of shape (num_dimensions, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { unitary_direction_matrix.shape }"
-	# more asserts
 	if local_weight_distrib is not None:
 		assert local_weight_distrib.shape == (size,), f"The local weight distribution (local_weight_distrib) must be a 1-d array of length { size } given the distribution was of shape { distrib.shape }, the shape given was { local_weight_distrib.shape }"
 	if category_weights is not None:
@@ -228,10 +230,11 @@ def ot_heterogeneity_from_null_distrib(
 
 
 def ot_heterogeneity_populations(
-	distrib, distance_mat: np.array, total_population_distrib: np.array=None, unitary_direction_matrix: np.array=None,
-	transport_plane: np.array=None, return_transport_plane: bool=False,
-	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	distrib, distance_mat: np.array, total_population_distrib: np.array=None,
+	unitary_direction_matrix: np.array=None, transport_plane: np.array=None,
+	return_transport_plane: bool=False, epsilon_exponent: float=-1e-3,
+	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
+	ot_emb_args : list=[], ot_emb_kwargs : dict={}
 ):
 	'''
     The ot_heterogeneity_populations function uses the total population distribution accross all classes as the null
@@ -243,6 +246,8 @@ def ot_heterogeneity_populations(
         	population distribution, i.e. the population of each category in each location. A 1d array requires 
         	`total_population_distrib` to be passed.
         distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
+
+    Optional parameters:
         total_population_distrib (np.array): 1d-array of length `size` representing the population at each locality,
         	usefull to compute the heterogeneity of one or multiple small group within a larger population, while
         	ignoring the majority that is outside of these small groups.
@@ -282,8 +287,9 @@ def ot_heterogeneity_populations(
 	)
 
 def ot_heterogeneity_linear_regression(
-	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array, local_weight_distrib: np.array=None,
-	transport_plane: np.array=None, return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
+	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array,
+	local_weight_distrib: np.array=None, transport_plane: np.array=None,
+	return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
 	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
