@@ -87,7 +87,7 @@ def ot_heterogeneity_from_null_distrib(
 	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None,
 	category_weights: np.array=None, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
-	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	ot_solve_kwargs : dict={}
 ):
 	'''
     The ot_heterogeneity_from_null_distrib function is the most general function implementing our method for measuring
@@ -116,8 +116,7 @@ def ot_heterogeneity_from_null_distrib(
         use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
         	for the cost matrix in the optimal-transport computation.
         min_value_avoid_zeros (float): value below wich a value is concidered zero.
-        ot_emb_args (list): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
-        ot_emb_kwargs (dict): list of additional amed argument to pass to the ot.emb function that is used as a backend.
+        ot_solve_kwargs (dict): list of additional amed argument to pass to the ot.solve function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)
@@ -181,7 +180,7 @@ def ot_heterogeneity_from_null_distrib(
 			for category in range(num_categories):
 				distrib_from[category] = distrib[category] / np.sum(distrib[category])
 
-		transport_plane = utils.compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_emb_args=ot_emb_args, ot_emb_kwargs=ot_emb_kwargs)
+		transport_plane = utils.compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_solve_kwargs=ot_solve_kwargs)
 
 	for category in range(num_categories):
 		weight_this_category                  = np.sum(distrib[category]) if category_weights is None else category_weights[category]
@@ -234,7 +233,7 @@ def ot_heterogeneity_populations(
 	unitary_direction_matrix: np.array=None, transport_plane: np.array=None,
 	return_transport_plane: bool=False, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
-	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	ot_solve_kwargs : dict={}
 ):
 	'''
     The ot_heterogeneity_populations function uses the total population distribution accross all classes as the null
@@ -261,8 +260,7 @@ def ot_heterogeneity_populations(
         use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
         	for the cost matrix in the optimal-transport computation.
         min_value_avoid_zeros (float): value below wich a value is concidered zero.
-        ot_emb_args (list): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
-        ot_emb_kwargs (dict): list of additional amed argument to pass to the ot.emb function that is used as a backend.
+        ot_solve_kwargs (dict): list of additional amed argument to pass to the ot.solve function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)
@@ -283,7 +281,7 @@ def ot_heterogeneity_populations(
 		distrib, null_distrib, distance_mat, transport_plane=transport_plane,
 		return_transport_plane=return_transport_plane, unitary_direction_matrix=unitary_direction_matrix,
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
-		min_value_avoid_zeros=min_value_avoid_zeros, ot_emb_args=ot_emb_args, ot_emb_kwargs=ot_emb_kwargs
+		min_value_avoid_zeros=min_value_avoid_zeros, ot_solve_kwargs=ot_solve_kwargs
 	)
 
 def ot_heterogeneity_linear_regression(
@@ -292,7 +290,7 @@ def ot_heterogeneity_linear_regression(
 	return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
 	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	min_value_avoid_zeros: float=1e-5, ot_solve_kwargs : dict={}
 ):
 	''' Will be documented later on. '''
 
@@ -321,5 +319,5 @@ def ot_heterogeneity_linear_regression(
 		transport_plane=transport_plane, return_transport_plane=return_transport_plane,
 		local_weight_distrib=local_weight_distrib, unitary_direction_matrix=unitary_direction_matrix,
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
-		min_value_avoid_zeros=min_value_avoid_zeros, ot_emb_args=ot_emb_args, ot_emb_kwargs=ot_emb_kwargs
+		min_value_avoid_zeros=min_value_avoid_zeros, ot_solve_kwargs=ot_solve_kwargs
 	), regression

@@ -50,7 +50,7 @@ def ot_heterogeneity_from_null_distrib(
 	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None,
 	category_weights: np.array=None, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
-	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	ot_solve_kwargs : dict={}
 )
 ```
 
@@ -68,8 +68,7 @@ With the following parameters being optional :
  - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
  - `min_value_avoid_zeros` (_`float`_): value below wich a value is concidered zero.
- - `ot_emb_args` (_`list`_): list of additional unamed argument to pass to the `ot.emb` function that is used as a backend.
- - `ot_emb_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.emb` function that is used as a backend.
+ - `ot_solve_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
@@ -87,7 +86,7 @@ def ot_heterogeneity_populations(
 	unitary_direction_matrix: np.array=None, transport_plane: np.array=None,
 	return_transport_plane: bool=False, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
-	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	ot_solve_kwargs : dict={}
 )
 ```
 
@@ -102,8 +101,7 @@ With the following parameters being optional :
  - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
  - `min_value_avoid_zeros` (_`float`_): value below wich a value is concidered zero.
- - `ot_emb_args` (_`list`_): list of additional unamed argument to pass to the `ot.emb` function that is used as a backend.
- - `ot_emb_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.emb` function that is used as a backend.
+ - `ot_solve_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
@@ -120,7 +118,7 @@ def ot_heterogeneity_linear_regression(
 	return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
 	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
-	min_value_avoid_zeros: float=1e-5, ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	min_value_avoid_zeros: float=1e-5, ot_solve_kwargs : dict={}
 )
 ```
 
@@ -142,7 +140,7 @@ unitary_dir_mat, distance_mat = oth.utils.compute_unitary_direction_matrix_polar
 ```python
 def compute_optimal_transport_flux(
 	distributions_to: np.array, distributions_from: np.array, distance_mat: np.array,
-	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	ot_solve_kwargs : dict={}, force_for_loop : bool=False
 )
 ```
 
@@ -152,8 +150,8 @@ The `compute_optimal_transport_flux` function computes the distance between a li
 
 With the following parameters being optional :
  - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) filled with the distance between each location.
- - `ot_emb_args` (_`list`_): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
- - `ot_emb_kwargs` (_`dict`_): list of additional amed argument to pass to the ot.emb function that is used as a backend.
+ - `ot_solve_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
+ - `force_for_loop` (_`bool`_): force solving using `ot.solve` instead of `ot.solve_batch`.
 
 It returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
 

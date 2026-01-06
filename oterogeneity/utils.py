@@ -4,7 +4,7 @@ import collections
 
 def compute_optimal_transport_flux(
 	distributions_to: np.array, distributions_from: np.array, distance_mat: np.array,
-	ot_emb_args : list=[], ot_emb_kwargs : dict={}
+	ot_solve_kwargs : dict={}, force_for_loop : bool=True
 ):
 	'''
 	The compute_distance_matrix function computes the distance between a list of coordinates.
@@ -17,8 +17,8 @@ def compute_optimal_transport_flux(
 
     Optional parameters:
         distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
-        ot_emb_args (list): list of additional unamed argument to pass to the ot.emb function that is used as a backend.
-        ot_emb_kwargs (dict): list of additional amed argument to pass to the ot.emb function that is used as a backend.
+        ot_solve_kwargs (dict): list of additional amed argument to pass to the ot.solve function that is used as a backend.
+        force_for_loop (bool): force solving using ot.solve instead of ot.solve_batch.
 
 	Returns:
 		transport_plane (np.array): either a 3d array of shape (`num_categories`, `size`, `size`) or a 2d array
@@ -45,11 +45,21 @@ def compute_optimal_transport_flux(
 	transport_plane = np.zeros((num_categories, size, size)) if not is_distributions_from_1d else np.zeros((num_categories, size, size))
 
 	if is_distributions_from_1d:
-		transport_plane = ot.emd(distributions_to if is_distributions_to_1d else distributions_to[0], distributions_from, distance_mat, *ot_emb_args, **ot_emb_kwargs)
+		transport_plane = ot.solve(distance_mat, distributions_to if is_distributions_to_1d else distributions_to[0], distributions_from, **ot_solve_kwargs).plan
 	else:
-		for dimension in range(num_categories):
-			transport_plane[dimension, :, :] = ot.emd(distributions_to if is_distributions_to_1d else distributions_to[dimension], distributions_from[dimension], distance_mat, *ot_emb_args, **ot_emb_kwargs)
-
+		if force_for_loop:
+			for dimension in range(num_categories):
+				transport_plane[dimension, :, :] = ot.solve(distance_mat, distributions_to if is_distributions_to_1d else distributions_to[dimension], distributions_from[dimension], **ot_solve_kwargs).plan
+		else:
+			distance_mat_batch = np.repeat(np.expand_dims(distance_mat, axis=0), num_categories, axis=0)
+			if is_distributions_to_1d:
+				distributions_to_batch = np.repeat(np.expand_dims(distributions_to, axis=0), num_categories, axis=0)
+			else:
+				distributions_to_batch = distributions_to
+			transport_plane = ot.solve_batch(
+				M=distance_mat_batch, a=distributions_to_batch, b=distributions_from,
+				reg=1 if "reg" not in ot_solve_kwargs else ot_solve_kwargs["reg"], **ot_solve_kwargs
+			).plan
 	return transport_plane
 
 
