@@ -83,7 +83,7 @@ class ot_heterogeneity_results:
 
 def ot_heterogeneity_from_null_distrib(
 	distrib: np.array, null_distrib: np.array, distance_mat: np.array,
-	transport_plane: np.array=None, return_transport_plane: bool=False,
+	transport_plan: np.array=None, return_transport_plan: bool=False,
 	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None,
 	category_weights: np.array=None, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
@@ -102,10 +102,10 @@ def ot_heterogeneity_from_null_distrib(
         distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
     Optional parameters:
-        transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+        transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
 			the flux of population n from locality i to locality j.
-		return_transport_plane (bool): if true, the function will also return the transport plane.
+		return_transport_plan (bool): if true, the function will also return the transport plane.
         unitary_direction_matrix (np.array): 3d-array of shape (`num_dimensions`, `size`, `size`) representing the unitary
         	vector between each location.
         local_weight_distrib (np.array): 1d-array of length `size` representing the weight for each location. By default
@@ -120,9 +120,9 @@ def ot_heterogeneity_from_null_distrib(
 
 	Returns:
 		results (ot_heterogeneity_results)
-		transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+		transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distrib is only 1d. Element of index (n, i, j) reprensents the flux
-			of population n from locality i to locality j. Returned only if return_transport_plane is true.
+			of population n from locality i to locality j. Returned only if return_transport_plan is true.
     '''
 
 	is_local_weights_1dimensional = len(local_weight_distrib.shape) == 1 if local_weight_distrib is not None else False
@@ -141,11 +141,11 @@ def ot_heterogeneity_from_null_distrib(
 	assert len(distrib.shape) <= 2, f"The distribution (distrib) can only be 1 or 2-dimensional, the shape given was { distrib.shape }"
 	assert null_distrib.shape in [(size,), (num_categories, size)], f"The null distribution (null_distrib) must be of shape ({ size },) or ({ num_categories }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { null_distrib.shape }"
 	assert distance_mat.shape == (size, size), f"The distance matrix (distance_mat) must be a square matrix of shape ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { distance_mat.shape }"
-	if transport_plane is not None:
+	if transport_plan is not None:
 		if is_distrib_1dimensional:
-			assert transport_plane.shape in [(size, size), (1, size, size)], f"The transport plane (transport_plane) passed must be of shape (1, { size }, { size }) or ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plane.shape }"
+			assert transport_plan.shape in [(size, size), (1, size, size)], f"The transport plane (transport_plan) passed must be of shape (1, { size }, { size }) or ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plan.shape }"
 		else:
-			assert transport_plane.shape == (num_categories, size, size), f"The transport plane (transport_plane) passed must be of shape ({ num_categories }, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plane.shape }"
+			assert transport_plan.shape == (num_categories, size, size), f"The transport plane (transport_plan) passed must be of shape ({ num_categories }, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plan.shape }"
 	if unitary_direction_matrix is not None:
 		assert unitary_direction_matrix.shape == (num_dimensions, size, size), f"The unitary direction matrix (unitary_direction_matrix) passed must be of shape (num_dimensions, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { unitary_direction_matrix.shape }"
 	if local_weight_distrib is not None:
@@ -162,11 +162,11 @@ def ot_heterogeneity_from_null_distrib(
 		else:
 			local_weight_distrib = np.clip(np.sum(null_distrib, axis=0) / np.sum(null_distrib), min_value_avoid_zeros, np.inf)
 
-	if transport_plane is None or use_same_exponent_weight:
+	if transport_plan is None or use_same_exponent_weight:
 		alpha_exponent = 1 + epsilon_exponent
 		distance_mat_alpha = np.pow(distance_mat, alpha_exponent)
 
-	if transport_plane is None:
+	if transport_plan is None:
 		distrib_from, distrib_to = np.zeros_like(distrib, dtype=np.float32), np.zeros_like(null_distrib, dtype=np.float32)
 		if is_null_distrib_1dimensional:
 			distrib_to = null_distrib / np.sum(null_distrib)
@@ -180,12 +180,12 @@ def ot_heterogeneity_from_null_distrib(
 			for category in range(num_categories):
 				distrib_from[category] = distrib[category] / np.sum(distrib[category])
 
-		transport_plane = utils.compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_solve_kwargs=ot_solve_kwargs)
+		transport_plan = utils.compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_solve_kwargs=ot_solve_kwargs)
 
 	for category in range(num_categories):
 		weight_this_category                  = np.sum(distrib[category]) if category_weights is None else category_weights[category]
 
-		category_ot_result  = np.copy(transport_plane[category, :, :]) if len(transport_plane.shape) == 3 else transport_plane
+		category_ot_result  = np.copy(transport_plan[category, :, :]) if len(transport_plan.shape) == 3 else transport_plan
 		category_ot_result *= distance_mat_alpha if use_same_exponent_weight else distance_mat
 
 		local_exiting_heterogeneity_this_category  = category_ot_result.sum(axis=0) / local_weight_distrib
@@ -223,15 +223,15 @@ def ot_heterogeneity_from_null_distrib(
 	if is_distrib_1dimensional:
 		distrib = distrib[0]
 
-	if return_transport_plane:
-		return results, transport_plane
+	if return_transport_plan:
+		return results, transport_plan
 	return results
 
 
 def ot_heterogeneity_populations(
 	distrib, distance_mat: np.array, total_population_distrib: np.array=None,
-	unitary_direction_matrix: np.array=None, transport_plane: np.array=None,
-	return_transport_plane: bool=False, epsilon_exponent: float=-1e-3,
+	unitary_direction_matrix: np.array=None, transport_plan: np.array=None,
+	return_transport_plan: bool=False, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
 	ot_solve_kwargs : dict={}
 ):
@@ -250,10 +250,10 @@ def ot_heterogeneity_populations(
         total_population_distrib (np.array): 1d-array of length `size` representing the population at each locality,
         	usefull to compute the heterogeneity of one or multiple small group within a larger population, while
         	ignoring the majority that is outside of these small groups.
-        transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+        transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
 			the flux of population n from locality i to locality j.
-		return_transport_plane (bool): if true, the function will also return the transport plane.
+		return_transport_plan (bool): if true, the function will also return the transport plane.
         unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary
         	vector between each location.
         epsilon_exponent (float): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
@@ -264,9 +264,9 @@ def ot_heterogeneity_populations(
 
 	Returns:
 		results (ot_heterogeneity_results)
-		transport_plane (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+		transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distrib is only 1d. Element of index (n, i, j) reprensents the flux
-			of population n from locality i to locality j. Returned only if return_transport_plane is true.
+			of population n from locality i to locality j. Returned only if return_transport_plan is true.
     '''
 
 	is_distrib_1dimensional = len(distrib.shape) == 1
@@ -278,16 +278,16 @@ def ot_heterogeneity_populations(
 		null_distrib = total_population_distrib / np.sum(total_population_distrib) * np.sum(distrib)
 
 	return ot_heterogeneity_from_null_distrib(
-		distrib, null_distrib, distance_mat, transport_plane=transport_plane,
-		return_transport_plane=return_transport_plane, unitary_direction_matrix=unitary_direction_matrix,
+		distrib, null_distrib, distance_mat, transport_plan=transport_plan,
+		return_transport_plan=return_transport_plan, unitary_direction_matrix=unitary_direction_matrix,
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
 		min_value_avoid_zeros=min_value_avoid_zeros, ot_solve_kwargs=ot_solve_kwargs
 	)
 
 def ot_heterogeneity_linear_regression(
 	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array,
-	local_weight_distrib: np.array=None, transport_plane: np.array=None,
-	return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
+	local_weight_distrib: np.array=None, transport_plan: np.array=None,
+	return_transport_plan: bool=False, unitary_direction_matrix: np.array=None,
 	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_solve_kwargs : dict={}
@@ -316,7 +316,7 @@ def ot_heterogeneity_linear_regression(
 
 	return ot_heterogeneity_from_null_distrib(
 		distrib, null_distrib, distance_mat,
-		transport_plane=transport_plane, return_transport_plane=return_transport_plane,
+		transport_plan=transport_plan, return_transport_plan=return_transport_plan,
 		local_weight_distrib=local_weight_distrib, unitary_direction_matrix=unitary_direction_matrix,
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
 		min_value_avoid_zeros=min_value_avoid_zeros, ot_solve_kwargs=ot_solve_kwargs

@@ -46,7 +46,7 @@ The `ot_heterogeneity_from_null_distrib` function is the most general function i
 ```python
 def ot_heterogeneity_from_null_distrib(
 	distrib: np.array, null_distrib: np.array, distance_mat: np.array,
-	transport_plane: np.array=None, return_transport_plane: bool=False,
+	transport_plan: np.array=None, return_transport_plan: bool=False,
 	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None,
 	category_weights: np.array=None, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
@@ -60,8 +60,8 @@ The following parameters are passed to the function :
  - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
 With the following parameters being optional :
- - `transport_plane` (_`np.array`_): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
- - `return_transport_plane` (_`bool`_): if true, the function will also return the transport plane.
+ - `transport_plan` (_`np.array`_): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+ - `return_transport_plan` (_`bool`_): if true, the function will also return the transport plan.
  - `unitary_direction_matrix` (_`np.array`_): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary vector between each location.
  - `local_weight_distrib` (_`np.array`_): 1d-array of length `size` representing the weight for each location. By default this weight is simply the proportion of the total population located in each location.
  - `category_weights` (_`np.array`_): 1d-array of length `num_categories` representing the weight for each num_category. By default this weight is simply the proportion of the total population that belong to each category.
@@ -72,9 +72,9 @@ With the following parameters being optional :
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
-If `return_transport_plane` is true, the function also returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+If `return_transport_plan` is true, the function also returns the transport plan (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
 
-If `return_transport_plane` is true, the function also returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+If `return_transport_plan` is true, the function also returns the transport plan (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
 
 #### 1.b.2 - `ot_heterogeneity_populations`
 
@@ -83,8 +83,8 @@ The `ot_heterogeneity_populations` function uses the total population distributi
 ```python
 def ot_heterogeneity_populations(
 	distrib, distance_mat: np.array, total_population_distrib: np.array=None,
-	unitary_direction_matrix: np.array=None, transport_plane: np.array=None,
-	return_transport_plane: bool=False, epsilon_exponent: float=-1e-3,
+	unitary_direction_matrix: np.array=None, transport_plan: np.array=None,
+	return_transport_plan: bool=False, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
 	ot_solve_kwargs : dict={}
 )
@@ -95,8 +95,8 @@ The following parameters are passed to the function :
  - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
 With the following parameters being optional :
- - `transport_plane` (_`np.array`_): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
- - `return_transport_plane` (_`bool`_): if true, the function will also return the transport plane.
+ - `transport_plan` (_`np.array`_): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+ - `return_transport_plan` (_`bool`_): if true, the function will also return the transport plan.
  - `unitary_direction_matrix` (_`np.array`_): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary vector between each location.
  - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
@@ -105,7 +105,7 @@ With the following parameters being optional :
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
-If `return_transport_plane` is true, the function also returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+If `return_transport_plan` is true, the function also returns the transport plan (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
 
 #### 1.b.1 - `ot_heterogeneity_linear_regression`
 
@@ -114,8 +114,8 @@ _The `ot_heterogeneity_linear_regression` function will be documented later on._
 ```python
 def ot_heterogeneity_linear_regression(
 	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array,
-	local_weight_distrib: np.array=None, transport_plane: np.array=None,
-	return_transport_plane: bool=False, unitary_direction_matrix: np.array=None,
+	local_weight_distrib: np.array=None, transport_plan: np.array=None,
+	return_transport_plan: bool=False, unitary_direction_matrix: np.array=None,
 	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_solve_kwargs : dict={}
@@ -153,7 +153,7 @@ With the following parameters being optional :
  - `ot_solve_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
  - `force_for_loop` (_`bool`_): force solving using `ot.solve` instead of `ot.solve_batch`.
 
-It returns the transport plane (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
+It returns the transport plan (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
 
 #### 1.c.2 - `compute_distance_matrix`
 
