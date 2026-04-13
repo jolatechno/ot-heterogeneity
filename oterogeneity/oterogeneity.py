@@ -1,8 +1,6 @@
-import ot
-import numpy as np
-import sklearn
-import collections
-from . import utils
+import numpy as _np
+import sklearn as _sklearn
+from . import utils as _utils
 
 class ot_heterogeneity_results:
 	'''
@@ -52,12 +50,12 @@ class ot_heterogeneity_results:
 		else:
 			self.size, self.num_categories, self.num_dimensions, self.has_direction = size, num_categories, num_dimensions, has_direction
 			self.global_heterogeneity         = 0
-			self.local_heterogeneity          = np.zeros(size)
-			self.local_exiting_heterogeneity  = np.zeros(size)
-			self.local_entering_heterogeneity = np.zeros(size)
+			self.local_heterogeneity          = _np.zeros(size)
+			self.local_exiting_heterogeneity  = _np.zeros(size)
+			self.local_entering_heterogeneity = _np.zeros(size)
 
 			if has_direction:
-				self.direction = np.zeros((num_dimensions, size))
+				self.direction = _np.zeros((num_dimensions, size))
 			else:
 				self.num_dimensions         = 1
 				self.direction              = None
@@ -65,27 +63,27 @@ class ot_heterogeneity_results:
 
 			if num_categories <= 1:
 				self.num_categories                            = 1
-				self.local_signed_heterogeneity                = np.zeros(size)
+				self.local_signed_heterogeneity                = _np.zeros(size)
 				self.global_heterogeneity_per_category         = None
 				self.local_heterogeneity_per_category          = None
 				self.local_exiting_heterogeneity_per_category  = None
 				self.local_entering_heterogeneity_per_category = None
 				self.direction_per_category                    = None
 			else:
-				self.global_heterogeneity_per_category         = np.zeros( num_categories)
-				self.local_signed_heterogeneity                = np.zeros((num_categories, size))
-				self.local_heterogeneity_per_category          = np.zeros((num_categories, size))
-				self.local_exiting_heterogeneity_per_category  = np.zeros((num_categories, size))
-				self.local_entering_heterogeneity_per_category = np.zeros((num_categories, size))
+				self.global_heterogeneity_per_category         = _np.zeros( num_categories)
+				self.local_signed_heterogeneity                = _np.zeros((num_categories, size))
+				self.local_heterogeneity_per_category          = _np.zeros((num_categories, size))
+				self.local_exiting_heterogeneity_per_category  = _np.zeros((num_categories, size))
+				self.local_entering_heterogeneity_per_category = _np.zeros((num_categories, size))
 				if has_direction:
-					self.direction_per_category = np.zeros((num_categories, num_dimensions, size))
+					self.direction_per_category = _np.zeros((num_categories, num_dimensions, size))
 
 
 def ot_heterogeneity_from_null_distrib(
-	distrib: np.array, null_distrib: np.array, distance_mat: np.array,
-	transport_plan: np.array=None, return_transport_plan: bool=False,
-	unitary_direction_matrix: np.array=None, local_weight_distrib: np.array=None,
-	category_weights: np.array=None, epsilon_exponent: float=-1e-3,
+	distrib: _np.array, null_distrib: _np.array, distance_mat: _np.array,
+	transport_plan: _np.array=None, return_transport_plan: bool=False,
+	unitary_direction_matrix: _np.array=None, local_weight_distrib: _np.array=None,
+	category_weights: _np.array=None, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
 	ot_solve_kwargs : dict={}
 ):
@@ -154,38 +152,38 @@ def ot_heterogeneity_from_null_distrib(
 		assert not is_distrib_1dimensional, "Cannot pass a category weight vector (category_weights) if the distribution is 1-dimensional"
 		assert category_weights.shape == (num_categories,), f"The lcategory weight vector (category_weights) must be a 1-d array of length { num_categories } given the distribution was of shape { distrib.shape }, the shape given was { category_weights.shape }"
 
-	total_weight = np.sum(distrib) if category_weights is None else np.sum(category_weights)
+	total_weight = _np.sum(distrib) if category_weights is None else _np.sum(category_weights)
 
 	if local_weight_distrib is None:
 		if is_null_distrib_1dimensional:
-			local_weight_distrib = np.clip(null_distrib / np.sum(null_distrib), min_value_avoid_zeros, np.inf)
+			local_weight_distrib = _np.clip(null_distrib / _np.sum(null_distrib), min_value_avoid_zeros, _np.inf)
 		else:
-			local_weight_distrib = np.clip(np.sum(null_distrib, axis=0) / np.sum(null_distrib), min_value_avoid_zeros, np.inf)
+			local_weight_distrib = _np.clip(np.sum(null_distrib, axis=0) / _np.sum(null_distrib), min_value_avoid_zeros, _np.inf)
 
 	if transport_plan is None or use_same_exponent_weight:
 		alpha_exponent = 1 + epsilon_exponent
-		distance_mat_alpha = np.pow(distance_mat, alpha_exponent)
+		distance_mat_alpha = _np.pow(distance_mat, alpha_exponent)
 
 	if transport_plan is None:
-		distrib_from, distrib_to = np.zeros_like(distrib, dtype=np.float32), np.zeros_like(null_distrib, dtype=np.float32)
+		distrib_from, distrib_to = _np.zeros_like(distrib, dtype=_np.float32), _np.zeros_like(null_distrib, dtype=_np.float32)
 		if is_null_distrib_1dimensional:
-			distrib_to = null_distrib / np.sum(null_distrib)
+			distrib_to = null_distrib / _np.sum(null_distrib)
 		else:
 			for category in range(num_categories):
-				distrib_to[category] = null_distrib[category] / np.sum(null_distrib[category])
+				distrib_to[category] = null_distrib[category] / _np.sum(null_distrib[category])
 
 		if is_distrib_1dimensional:
-			distrib_from = distrib / np.sum(distrib)
+			distrib_from = distrib / _np.sum(distrib)
 		else:
 			for category in range(num_categories):
-				distrib_from[category] = distrib[category] / np.sum(distrib[category])
+				distrib_from[category] = distrib[category] / _np.sum(distrib[category])
 
-		transport_plan = utils.compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_solve_kwargs=ot_solve_kwargs)
+		transport_plan = _utils.compute_optimal_transport_flux(distrib_to, distrib_from, distance_mat_alpha, ot_solve_kwargs=ot_solve_kwargs)
 
 	for category in range(num_categories):
-		weight_this_category                  = np.sum(distrib[category]) if category_weights is None else category_weights[category]
+		weight_this_category                  = _np.sum(distrib[category]) if category_weights is None else category_weights[category]
 
-		category_ot_result  = np.copy(transport_plan[category, :, :]) if len(transport_plan.shape) == 3 else transport_plan
+		category_ot_result  = _np.copy(transport_plan[category, :, :]) if len(transport_plan.shape) == 3 else transport_plan
 		category_ot_result *= distance_mat_alpha if use_same_exponent_weight else distance_mat
 
 		local_exiting_heterogeneity_this_category  = category_ot_result.sum(axis=0) / local_weight_distrib
@@ -198,7 +196,7 @@ def ot_heterogeneity_from_null_distrib(
 			results.local_entering_heterogeneity = local_entering_heterogeneity_this_category
 			results.local_signed_heterogeneity   = (local_exiting_heterogeneity_this_category - local_entering_heterogeneity_this_category) / 2
 
-			results.global_heterogeneity = np.sum(local_heterogeneity_this_category * local_weight_distrib)
+			results.global_heterogeneity = _np.sum(local_heterogeneity_this_category * local_weight_distrib)
 
 			if has_direction:
 				for dimension in range(num_dimensions):
@@ -212,7 +210,7 @@ def ot_heterogeneity_from_null_distrib(
 			results.local_entering_heterogeneity_per_category[category]  = local_entering_heterogeneity_this_category
 			results.local_signed_heterogeneity[category]                 = (local_exiting_heterogeneity_this_category - local_entering_heterogeneity_this_category) / 2
 			
-			results.global_heterogeneity_per_category[category]  = np.sum(local_heterogeneity_this_category * local_weight_distrib)
+			results.global_heterogeneity_per_category[category]  = _np.sum(local_heterogeneity_this_category * local_weight_distrib)
 			results.global_heterogeneity                        += results.global_heterogeneity_per_category[category] * weight_this_category / total_weight
 
 			if has_direction:
@@ -229,8 +227,8 @@ def ot_heterogeneity_from_null_distrib(
 
 
 def ot_heterogeneity_populations(
-	distrib, distance_mat: np.array, total_population_distrib: np.array=None,
-	unitary_direction_matrix: np.array=None, transport_plan: np.array=None,
+	distrib, distance_mat: _np.array, total_population_distrib: _np.array=None,
+	unitary_direction_matrix: _np.array=None, transport_plan: _np.array=None,
 	return_transport_plan: bool=False, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
 	ot_solve_kwargs : dict={}
@@ -273,9 +271,9 @@ def ot_heterogeneity_populations(
 
 	if total_population_distrib is None:
 		assert not is_distrib_1dimensional, "A reference distribution (total_population_distrib) must be passed to ot_heterogeneity_populations if the distribution (distrib) is 1-dimensional"
-		null_distrib = np.sum(distrib, axis=0)
+		null_distrib = _np.sum(distrib, axis=0)
 	else:
-		null_distrib = total_population_distrib / np.sum(total_population_distrib) * np.sum(distrib)
+		null_distrib = total_population_distrib / _np.sum(total_population_distrib) * _np.sum(distrib)
 
 	return ot_heterogeneity_from_null_distrib(
 		distrib, null_distrib, distance_mat, transport_plan=transport_plan,
@@ -285,10 +283,10 @@ def ot_heterogeneity_populations(
 	)
 
 def ot_heterogeneity_linear_regression(
-	distrib: np.array, prediction_distrib: np.array, distance_mat: np.array,
-	local_weight_distrib: np.array=None, transport_plan: np.array=None,
-	return_transport_plan: bool=False, unitary_direction_matrix: np.array=None,
-	fit_regression : bool=True, regression=sklearn.linear_model.LinearRegression(), 
+	distrib: _np.array, prediction_distrib: _np.array, distance_mat: _np.array,
+	local_weight_distrib: _np.array=None, transport_plan: _np.array=None,
+	return_transport_plan: bool=False, unitary_direction_matrix: _np.array=None,
+	fit_regression : bool=True, regression=_sklearn.linear_model.LinearRegression(), 
 	epsilon_exponent: float=-1e-3, use_same_exponent_weight: bool=True,
 	min_value_avoid_zeros: float=1e-5, ot_solve_kwargs : dict={}
 ):
@@ -301,10 +299,10 @@ def ot_heterogeneity_linear_regression(
 	size           = distrib.shape[0] if is_distrib_1dimensional else distrib.shape[1]
 
 	if local_weight_distrib is None:
-		local_weight_distrib = np.clip(np.sum(distrib, axis=0) / np.sum(distrib), min_value_avoid_zeros, np.inf)
+		local_weight_distrib = _np.clip(np.sum(distrib, axis=0) / _np.sum(distrib), min_value_avoid_zeros, _np.inf)
 
-	X_regression = np.expand_dims(prediction_distrib / local_weight_distrib, 1) if is_predict_distrib_1dimensional else (prediction_distrib / local_weight_distrib).T
-	Y_regression = np.expand_dims(           distrib / local_weight_distrib, 1) if         is_distrib_1dimensional else (           distrib / local_weight_distrib).T
+	X_regression = _np.expand_dims(prediction_distrib / local_weight_distrib, 1) if is_predict_distrib_1dimensional else (prediction_distrib / local_weight_distrib).T
+	Y_regression = _np.expand_dims(           distrib / local_weight_distrib, 1) if         is_distrib_1dimensional else (           distrib / local_weight_distrib).T
 
 	if fit_regression:
 		regression.fit(X_regression, Y_regression)
