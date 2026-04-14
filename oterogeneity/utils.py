@@ -9,16 +9,16 @@ def compute_optimal_transport_flux(
 	'''
 	The compute_distance_matrix function computes the distance between a list of coordinates.
 
-    Parameters:
-        distributions_to (np.array): 2d-array of shape (`num_categories`, `size`) or 1d-array of length `size`
-        	representing the end distribution of population.
-        distributions_from (np.array): 2d-array of shape (`num_categories`, `size`) or 1d-array of length `size`
-        	representing the starting distribution of population that will be transported to distributions_to.
+	Parameters:
+		distributions_to (np.array): 2d-array of shape (`num_categories`, `size`) or 1d-array of length `size`
+			representing the end distribution of population.
+		distributions_from (np.array): 2d-array of shape (`num_categories`, `size`) or 1d-array of length `size`
+			representing the starting distribution of population that will be transported to distributions_to.
 
-    Optional parameters:
-        distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
-        ot_solve_kwargs (dict): list of additional amed argument to pass to the ot.solve function that is used as a backend.
-        force_for_loop (bool): force solving using ot.solve instead of ot.solve_batch.
+	Optional parameters:
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
+		ot_solve_kwargs (dict): list of additional amed argument to pass to the ot.solve function that is used as a backend.
+		force_for_loop (bool): force solving using ot.solve instead of ot.solve_batch.
 
 	Returns:
 		transport_plane (np.array): either a 3d array of shape (`num_categories`, `size`, `size`) or a 2d array
@@ -65,17 +65,17 @@ def compute_optimal_transport_flux(
 
 def compute_distance_matrix(coordinates: _np.array, exponent: float=2):
 	'''
-    The compute_distance_matrix function computes the distance between a list of coordinates.
+	The compute_distance_matrix function computes the distance between a list of coordinates.
 
-    Parameters:
-        coordinates (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
+	Parameters:
+		coordinates (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
 
-    Optional parameters:
-        exponent (float): the exponent used in the norm (2 is the euclidien norm).
+	Optional parameters:
+		exponent (float): the exponent used in the norm (2 is the euclidien norm).
 
 	Returns:
 		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
-    '''
+	'''
 
 	assert len(coordinates.shape) == 2, f"coordinates passed to compute_distance_matrix must be a 2-dimensional array, array of shape { coordinates.shape } was given"
 
@@ -97,13 +97,13 @@ def compute_distance_matrix_polar(
 	coordinates on a sphere. by default it can be used for typical coordinates on earth.
 
 	Parameters:
-        latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
-        longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+		latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
+		longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
 
-    Optional parameters:
-        radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
-        unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
-        "arcmin", or "arcsec".
+	Optional parameters:
+		radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
+		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
+		"arcmin", or "arcsec".
 
 	Returns:
 		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
@@ -147,13 +147,13 @@ def compute_unitary_direction_matrix(
 	direction in the main functions.
 
 	Parameters:
-        coordinates (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
+		coordinates (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the position of each location.
 
-    Optional parameters:
-        distance_mat (np.array): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance
-        	between each location. If not passed it will be computed and returned.
-        exponent (float): the exponent used in the norm (2 is the euclidien norm). If a distance matrix is passed, it
-        	must have been computed with the same exponent as the one passed to this function.
+	Optional parameters:
+		distance_mat (np.array): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance
+			between each location. If not passed it will be computed and returned.
+		exponent (float): the exponent used in the norm (2 is the euclidien norm). If a distance matrix is passed, it
+			must have been computed with the same exponent as the one passed to this function.
 	
 	Returns:
 		unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the
@@ -200,15 +200,15 @@ def compute_unitary_direction_matrix_polar(
 	it can be used for typical coordinates on earth.
 
 	Parameters:
-        latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
-        longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+		latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
+		longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
 
-    Optional parameters:
-        distance_mat (np.array): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance
-        	between each location. If not passed it will be computed and returned.
-        radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
-        unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
-        "arcmin", or "arcsec".
+	Optional parameters:
+		distance_mat (np.array): you can optionally pass a 2d-array of shape (`size`, `size`) filled with the distance
+			between each location. If not passed it will be computed and returned.
+		radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
+		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
+		"arcmin", or "arcsec".
 	
 	Returns:
 		unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the
@@ -272,7 +272,7 @@ def compute_neighbor_index_matrix(distance_mat: _np.array):
 	distance isn't symmetric.
 
 	Parameters:
-        distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
 	
 	Returns:
 		neighbor_index_mat (np.array): 2d-array of shape (`size`, `size`) filled with the neighbor index : the
@@ -292,17 +292,20 @@ def compute_neighbor_index_matrix(distance_mat: _np.array):
 
 	return neighbor_index
 
-def compute_cumulative_neighbor_cost(distance_mat: _np.array, measure: _np.array):
+def compute_cumulative_neighbor_cost(distance_mat: _np.array, measure: _np.array, conserve_order: bool=True):
 	'''
 	The compute_cumulative_neighbor_cost function computes the cumulative sum of value over the neighborhood index.
 	i.e. the distance between i and j is the sum of the values located in the measure array for each lcoation k
 	located between i and j included. Note that this distance isn't symmetric.
 
 	Parameters:
-        distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
-        measure (np.array): either an array of length `size`, or a 2d-array of shape (`size`, `size`) that will be
-        	accumulated. If measure is a 2d array, then the values accumulated between i and j will be the indeces
-        	(i, k) for for each lcoation k located between i and j included.
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
+		measure (np.array): either an array of length `size`, or a 2d-array of shape (`size`, `size`) that will be
+			accumulated. If measure is a 2d array, then the values accumulated between i and j will be the indeces
+			(i, k) for for each lcoation k located between i and j included.
+
+	Optional parameters:
+		conserve_order (bool): wether to keep the order or to sort the array, default is true
 	
 	Returns:
 		cumulative_neighbor_cost (np.array): 2d-array of shape (`size`, `size`) filled with the accumulated values
@@ -323,10 +326,14 @@ def compute_cumulative_neighbor_cost(distance_mat: _np.array, measure: _np.array
 	if len(measure.shape) == 2:
 		assert measure.shape == (size, size), f"2d measure array passed to compute_cumulative_neighbor_cost must be of shape ({ size }, { size }) matching the size of the distance matrix, { measure.shape } was given"
 		unsorted_accumulated_values = _np.cumsum(_np.take_along_axis(measure, sorted_indeces, axis=1), axis=1)
-		accumulated_values[index_mat.T, sorted_indeces] = unsorted_accumulated_values
-		return accumulated_values
+		if conserve_order:
+			accumulated_values[index_mat.T, sorted_indeces] = unsorted_accumulated_values
+			return accumulated_values
+		return unsorted_accumulated_values
 
 	assert len(measure) == size, f"1d measure array passed to compute_cumulative_neighbor_cost must be of length { size } matching the size of the distance matrix, an array of length { len(measure) } was given"
 	unsorted_accumulated_values = _np.cumsum(measure[sorted_indeces], axis=1)
-	accumulated_values[index_mat.T, sorted_indeces] = unsorted_accumulated_values
-	return accumulated_values
+	if conserve_order:
+		accumulated_values[index_mat.T, sorted_indeces] = unsorted_accumulated_values
+		return accumulated_values
+	return unsorted_accumulated_values

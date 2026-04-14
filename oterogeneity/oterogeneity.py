@@ -5,21 +5,21 @@ from . import utils as _utils
 
 class ot_heterogeneity_results:
 	'''
-    The ot_heterogeneity_results class contains all of the results of a computation of spatial heterogeneity based on optimal
-    transport using our method.
+	The ot_heterogeneity_results class contains all of the results of a computation of spatial heterogeneity based on optimal
+	transport using our method.
 
-    Attributes:
-        size (int): Number of spatial units (town, polling stations, etc...)
-        num_categories (int): number of distinct categories
-        num_dimensions (int): number of spacial dimensions (typically 2)
-        has_direction (bool): whether the result contains directionality fields or not
-        global_heterogeneity (float): global heterogeneity index
-        global_heterogeneity_per_category (np.array): 1d-array of length `num_categories` that contains the local heterogeneity
-        	index for each category.
-        local_heterogeneity (np.array): 1d-array of length `size` that contains the local heterogeneity index for each location
-        local_signed_heterogeneity (np.array): either a 2d-array of shape (`num_categories`, `size`) when `num_categories` > 1,
-        	or a 1d-array of length `size` if `num_categories` = 1, that contains the signed heterogeneity index for each
-        	category and each location.
+	Attributes:
+		size (int): Number of spatial units (town, polling stations, etc...)
+		num_categories (int): number of distinct categories
+		num_dimensions (int): number of spacial dimensions (typically 2)
+		has_direction (bool): whether the result contains directionality fields or not
+		global_heterogeneity (float): global heterogeneity index
+		global_heterogeneity_per_category (np.array): 1d-array of length `num_categories` that contains the local heterogeneity
+			index for each category.
+		local_heterogeneity (np.array): 1d-array of length `size` that contains the local heterogeneity index for each location
+		local_signed_heterogeneity (np.array): either a 2d-array of shape (`num_categories`, `size`) when `num_categories` > 1,
+			or a 1d-array of length `size` if `num_categories` = 1, that contains the signed heterogeneity index for each
+			category and each location.
 		local_exiting_heterogeneity (np.array): 1d-array of length `size` that contains the heterogeneity index based only on
 			exiting flux for each location.
 		local_entering_heterogeneity (np.array): 1d-array of length `size` that contains the heterogeneity index based only on
@@ -32,7 +32,7 @@ class ot_heterogeneity_results:
 		direction (np.array): 2d-array of shape (`num_dimensions`, `size`) representing the vectorial field of directionality.
 		direction_per_category (np.array): 3d-array of shape (`num_categories`, `num_dimensions`, `size`) representing the
 			vectorial field of directionality for each category.
-    '''
+	'''
 
 	def __init__(self, size: int=0, num_categories: int=0, num_dimensions: int=1, has_direction : bool=False):
 		if size <= 0:
@@ -89,40 +89,40 @@ def ot_heterogeneity_from_null_distrib(
 	ot_solve_kwargs : dict={}
 ):
 	'''
-    The ot_heterogeneity_from_null_distrib function is the most general function implementing our method for measuring
-    spatial heterogeneity
+	The ot_heterogeneity_from_null_distrib function is the most general function implementing our method for measuring
+	spatial heterogeneity
 
-    Parameters:
-        distrib (np.array): 2d-array of shape (`num_categories`, `size`) representing the population distribution, i.e. the
-        	population of each category in each location. 
-        null_distrib (np.array): either a 2d-array of shape (`num_categories`, `size`) or a 1d-array of length `size` if
-        	every category has the same null distribution, representing the null distribution (distribution without
-        	heterogeneity), to which the distribution will be compared.
-        distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
+	Parameters:
+		distrib (np.array): 2d-array of shape (`num_categories`, `size`) representing the population distribution, i.e. the
+			population of each category in each location. 
+		null_distrib (np.array): either a 2d-array of shape (`num_categories`, `size`) or a 1d-array of length `size` if
+			every category has the same null distribution, representing the null distribution (distribution without
+			heterogeneity), to which the distribution will be compared.
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
-    Optional parameters:
-        transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+	Optional parameters:
+		transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
 			the flux of population n from locality i to locality j.
 		return_transport_plan (bool): if true, the function will also return the transport plane.
-        unitary_direction_matrix (np.array): 3d-array of shape (`num_dimensions`, `size`, `size`) representing the unitary
-        	vector between each location.
-        local_weight_distrib (np.array): 1d-array of length `size` representing the weight for each location. By default
-        	this weight is simply the proportion of the total population located in each location.
-        category_weights (np.array): 1d-array of length `num_categories` representing the weight for each num_category. By
-        	default this weight is simply the proportion of the total population that belong to each category.
-        epsilon_exponent (float): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
-        use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
-        	for the cost matrix in the optimal-transport computation.
-        min_value_avoid_zeros (float): value below wich a value is concidered zero.
-        ot_solve_kwargs (dict): list of additional argument to pass to the ot.solve function that is used as a backend.
+		unitary_direction_matrix (np.array): 3d-array of shape (`num_dimensions`, `size`, `size`) representing the unitary
+			vector between each location.
+		local_weight_distrib (np.array): 1d-array of length `size` representing the weight for each location. By default
+			this weight is simply the proportion of the total population located in each location.
+		category_weights (np.array): 1d-array of length `num_categories` representing the weight for each num_category. By
+			default this weight is simply the proportion of the total population that belong to each category.
+		epsilon_exponent (float): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
+		use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
+			for the cost matrix in the optimal-transport computation.
+		min_value_avoid_zeros (float): value below wich a value is concidered zero.
+		ot_solve_kwargs (dict): list of additional argument to pass to the ot.solve function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)
 		transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distrib is only 1d. Element of index (n, i, j) reprensents the flux
 			of population n from locality i to locality j. Returned only if return_transport_plan is true.
-    '''
+	'''
 
 	is_local_weights_1dimensional = len(local_weight_distrib.shape) == 1 if local_weight_distrib is not None else False
 	is_null_distrib_1dimensional  = len(null_distrib.shape)         == 1
@@ -235,38 +235,38 @@ def ot_heterogeneity_populations(
 	ot_solve_kwargs : dict={}
 ):
 	'''
-    The ot_heterogeneity_populations function uses the total population distribution accross all classes as the null
-    distribution. It thus assumes the nul distribution is the distribution where the total population at each location
-    doesn't change, and the proportion of each category is the same as the global distribution of classes.
+	The ot_heterogeneity_populations function uses the total population distribution accross all classes as the null
+	distribution. It thus assumes the nul distribution is the distribution where the total population at each location
+	doesn't change, and the proportion of each category is the same as the global distribution of classes.
 
-    Parameters:
-        distrib (np.array): 2d-array of shape (`num_categories`, `size`) or 1d-array of length `size` representing the
-        	population distribution, i.e. the population of each category in each location. A 1d array requires 
-        	`total_population_distrib` to be passed.
-        distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
+	Parameters:
+		distrib (np.array): 2d-array of shape (`num_categories`, `size`) or 1d-array of length `size` representing the
+			population distribution, i.e. the population of each category in each location. A 1d array requires 
+			`total_population_distrib` to be passed.
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
-    Optional parameters:
-        total_population_distrib (np.array): 1d-array of length `size` representing the population at each locality,
-        	usefull to compute the heterogeneity of one or multiple small group within a larger population, while
-        	ignoring the majority that is outside of these small groups.
-        transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
+	Optional parameters:
+		total_population_distrib (np.array): 1d-array of length `size` representing the population at each locality,
+			usefull to compute the heterogeneity of one or multiple small group within a larger population, while
+			ignoring the majority that is outside of these small groups.
+		transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents
 			the flux of population n from locality i to locality j.
 		return_transport_plan (bool): if true, the function will also return the transport plane.
-        unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary
-        	vector between each location.
-        epsilon_exponent (float): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
-        use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
-        	for the cost matrix in the optimal-transport computation.
-        min_value_avoid_zeros (float): value below wich a value is concidered zero.
-        ot_solve_kwargs (dict): list of additional argument to pass to the ot.solve function that is used as a backend.
+		unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the unitary
+			vector between each location.
+		epsilon_exponent (float): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
+		use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
+			for the cost matrix in the optimal-transport computation.
+		min_value_avoid_zeros (float): value below wich a value is concidered zero.
+		ot_solve_kwargs (dict): list of additional argument to pass to the ot.solve function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)
 		transport_plan (np.array): either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array
 			of shape (`size`, `size`) if distrib is only 1d. Element of index (n, i, j) reprensents the flux
 			of population n from locality i to locality j. Returned only if return_transport_plan is true.
-    '''
+	'''
 
 	is_distrib_1dimensional = len(distrib.shape) == 1
 
