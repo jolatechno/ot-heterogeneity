@@ -23,8 +23,17 @@ class multiscalar_results:
 			array of shape (`size`, `size`)
 		distorsion_coefficient (np.array): un-normalized distorsion coefficient for each locality, array of length `size`
 		distorsion_coefficient (np.array): un-normalized distorsion coefficient for each locality, array of length `size`
-		normalized_distorsion_coefficient (np.array): normalized distorsion coefficient for each locality, array of length `size`
+		normalized_distorsion_coefficient (np.array): normalized distorsion coefficient for each locality, array of length
+			`size`
 		normalization_coefficient (float): normalization coefficient
+		normalization_population_trajectory (np.array): worst `population_trajectory` computed for normalization, array
+			of shape (`num_categories`, `size`)
+		normalization_proportion_trajectory (np.array): worst `proportion_trajectory` computed for normalization, array
+			of shape (`num_categories`, `size`)
+		normalization_divergence_trajectory (np.array): worst `divergence_trajectory` computed for normalization, 1d
+			array of length `size`
+		normalization_integration_trajectory (np.array): worst integration absice computed for normalization, 1d array
+			of length `size`
 
 	'''
 
@@ -38,37 +47,80 @@ class multiscalar_results:
 		self.focal_time_trajectory_value       = _np.zeros((size, size))
 		self.distorsion_coefficient            = _np.zeros(size)
 		self.normalized_distorsion_coefficient = _np.zeros(size)
-		self.normalization_coefficient         = 0
+
+		self.normalization_coefficient            = 0
+		self.normalization_population_trajectory  = _np.zeros((num_categories, size))
+		self.normalization_proportion_trajectory  = _np.zeros((num_categories, size))
+		self.normalization_divergence_trajectory  = _np.zeros(size)
+		self.normalization_integration_trajectory = _np.zeros(size)
 
 def compute_multiscalar_normalization_coefficient(
-	distance_mat: _np.array, results: multiscalar_results, consider_distance: bool=False
+	results: multiscalar_results, distance_mat: _np.array,
+	divergence=divergences.KL_divergence, consider_distance: bool=False
 ) -> float:
 	'''
 	The compute_multiscalar_normalization_coefficient function computes the normalization factor for the multiscalar lens
 	heterogeneity index.
 
 	Parameters:
-		distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 		results (multiscalar_results) : complete or partially complete (without normalization) results of a multiscalar
 			lens heterogeneity computation.
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
 
 	Optional parameters:
+		divergence (function (np.array, np.array) -> np.array): function to compute the divegrences, some of which
+			can be found in the divergences subpackage. Default is divergences.kl_divergence
 		consider_distance (bool): wether to consider the distance when computing area under the curve, default is
 			false and thus reverts to using accululated population as the integration variable, as in the base
 			version of the multiscalar lens index.
 
 	Returns:
-		normalization_coefficient (float)
+		results (multiscalar_results) with updated normalization
 	'''
 
-	if consider_distance:
-		# TODO
-		pass
-	else:
-		# TODO
-		pass
+	size                        = results.size
+	num_categories              = results.num_categories
+	total_population_trajectory = _np.sum(results.population_trajectory, axis=0)
+	total_population            = total_population_trajectory[0, -1]
 
-	return 1.0
+	if consider_distance:
+		results.normalization_integration_trajectory = _np.max(distance_mat,                axis=0)
+		integration_variable                         = _np.diff(_np.append([0], results.normalization_integration_trajectory))
+		worst_population_trajectory                  = _np.min(total_population_trajectory, axis=0)
+	else:
+		integration_variable                         = _np.full(size, total_population/size)
+		worst_population_trajectory                  = _np.cumsum(integration_variable)
+		results.normalization_integration_trajectory = worst_population_trajectory
+
+	reference_distribution  = _np.sort(results.reference_distribution)
+	population_distribution = reference_distribution*total_population
+
+	results.normalization_population_trajectory = _np.zeros((num_categories, size))
+	running_added_population = _np.zeros(num_categories)
+	for step in range(size):
+		population_to_add = worst_population_trajectory[step] - (0 if step == 0 else worst_population_trajectory[step-1])
+		population_not_added_yet = population_distribution - running_added_population
+
+		for category in range(num_categories):
+			results.normalization_population_trajectory[category, step] = min(population_to_add, population_not_added_yet[category])
+			population_to_add -= results.normalization_population_trajectory[category, step]
+			if population_to_add <= 0:
+				break
+
+		running_added_population += results.normalization_population_trajectory[:, step]
+	results.normalization_population_trajectory = _np.cumsum(results.normalization_population_trajectory, axis=1)
+
+	results.normalization_proportion_trajectory = _np.zeros_like(results.normalization_population_trajectory)
+	for category in range(num_categories):
+		results.normalization_proportion_trajectory[category, :] = results.normalization_population_trajectory[category, :] / worst_population_trajectory
+
+	results.normalization_divergence_trajectory = divergence(results.normalization_proportion_trajectory, reference_distribution)
+
+	results.normalization_coefficient         = _np.sum(integration_variable * results.normalization_divergence_trajectory)
+	results.normalized_distorsion_coefficient = results.distorsion_coefficient / results.normalization_coefficient
+
+	return results
+
 
 def compute_multiscalar(
 	distrib : _np.array, distance_mat: _np.array, total_population_distrib: _np.array=None,
@@ -87,7 +139,6 @@ def compute_multiscalar(
 		total_population_distrib (np.array): 1d-array of length `size` representing the population at each locality,
 			usefull to compute the heterogeneity of one or multiple small group within a larger population, while
 			ignoring the majority that is outside of these small groups.
-		min_value_avoid_zeros (float): value below wich a value is concidered zero.
 		divergence (function (np.array, np.array) -> np.array): function to compute the divegrences, some of which
 			can be found in the divergences subpackage. Default is divergences.kl_divergence
 		consider_distance (bool): wether to consider the distance when computing area under the curve, default is
@@ -111,7 +162,7 @@ def compute_multiscalar(
 		results.proportion_trajectory[category, :, :] = results.population_trajectory[category, :, :] / total_population_trajectory
 
 	results.reference_distribution = results.proportion_trajectory[:, 0, -1] if total_population_distrib is None else total_population_distrib/_np.sum(total_population_distrib)
-	distance_mat_  = np.sort(distance_mat, axis=1) if consider_distance else total_population_trajectory
+	distance_mat_  = _np.sort(distance_mat, axis=1) if consider_distance else total_population_trajectory
 
 	results.divergence_trajectory = divergence(results.proportion_trajectory.reshape(num_categories, size * size), results.reference_distribution).reshape(size, size)
 
@@ -127,7 +178,6 @@ def compute_multiscalar(
 	integration_variable           = _np.diff(_np.append(_np.zeros((size, 1)), results.focal_time_trajectory, axis=1), axis=1)
 	results.distorsion_coefficient = _np.sum(integration_variable * results.focal_time_trajectory_value, axis=1)
 
-	results.normalization_coefficient         = compute_multiscalar_normalization_coefficient(results, distance_mat, consider_distance)
-	results.normalized_distorsion_coefficient = results.distorsion_coefficient / results.normalization_coefficient
+	results = compute_multiscalar_normalization_coefficient(results, distance_mat_, divergence, consider_distance)
 
 	return results
