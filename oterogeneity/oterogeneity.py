@@ -1,5 +1,6 @@
 import numpy as _np
 import sklearn as _sklearn
+
 from . import utils as _utils
 
 class ot_heterogeneity_results:
@@ -114,7 +115,7 @@ def ot_heterogeneity_from_null_distrib(
         use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
         	for the cost matrix in the optimal-transport computation.
         min_value_avoid_zeros (float): value below wich a value is concidered zero.
-        ot_solve_kwargs (dict): list of additional amed argument to pass to the ot.solve function that is used as a backend.
+        ot_solve_kwargs (dict): list of additional argument to pass to the ot.solve function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)
@@ -227,7 +228,7 @@ def ot_heterogeneity_from_null_distrib(
 
 
 def ot_heterogeneity_populations(
-	distrib, distance_mat: _np.array, total_population_distrib: _np.array=None,
+	distrib : _np.array, distance_mat: _np.array, total_population_distrib: _np.array=None,
 	unitary_direction_matrix: _np.array=None, transport_plan: _np.array=None,
 	return_transport_plan: bool=False, epsilon_exponent: float=-1e-3,
 	use_same_exponent_weight: bool=True, min_value_avoid_zeros: float=1e-5,
@@ -258,7 +259,7 @@ def ot_heterogeneity_populations(
         use_same_exponent_weight (bool): if true the cost (i.e. distant) is exponentiated by the same exponent as the one
         	for the cost matrix in the optimal-transport computation.
         min_value_avoid_zeros (float): value below wich a value is concidered zero.
-        ot_solve_kwargs (dict): list of additional amed argument to pass to the ot.solve function that is used as a backend.
+        ot_solve_kwargs (dict): list of additional argument to pass to the ot.solve function that is used as a backend.
 
 	Returns:
 		results (ot_heterogeneity_results)

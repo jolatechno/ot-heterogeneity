@@ -68,7 +68,7 @@ With the following parameters being optional :
  - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
  - `min_value_avoid_zeros` (_`float`_): value below wich a value is concidered zero.
- - `ot_solve_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
+ - `ot_solve_kwargs` (_`dict`_): list of additional argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
@@ -101,7 +101,7 @@ With the following parameters being optional :
  - `epsilon_exponent` (_`float`_): the distance matrix is exponentiated (element-wise) by an exponent `1+epsilon_exponent`
  - `use_same_exponent_weight` (_`bool`_): if true the cost (i.e. distant) is exponentiated by the same exponent as the one for the cost matrix in the optimal-transport computation.
  - `min_value_avoid_zeros` (_`float`_): value below wich a value is concidered zero.
- - `ot_solve_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
+ - `ot_solve_kwargs` (_`dict`_): list of additional argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
 
 The function returns a result as an object of class `ot_heterogeneity_results`.
 
@@ -150,7 +150,7 @@ The `compute_optimal_transport_flux` function computes the distance between a li
 
 With the following parameters being optional :
  - `distance_mat` (_`np.array`_): 2d-array of shape (`size`, `size`) filled with the distance between each location.
- - `ot_solve_kwargs` (_`dict`_): list of additional amed argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
+ - `ot_solve_kwargs` (_`dict`_): list of additional argument to pass to the `ot.solve` (or `ot.solve_batch`) function that is used as a backend.
  - `force_for_loop` (_`bool`_): force solving using `ot.solve` instead of `ot.solve_batch`.
 
 It returns the transport plan (np.array) which is either a 3d array of shape (`num_dimensions`, `size`, `size`) or a 2d array of shape (`size`, `size`) if distributions_from is only 1d. Element of index (n, i, j) reprensents the flux of population n from locality i to locality j.
