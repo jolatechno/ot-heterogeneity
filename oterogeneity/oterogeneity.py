@@ -1,7 +1,8 @@
 import numpy as _np
 import sklearn as _sklearn
+import ot as _ot
 
-from . import utils as _utils
+from . import utils
 
 class ot_heterogeneity_results:
 	'''
@@ -129,7 +130,7 @@ def ot_heterogeneity_from_null_distrib(
 	is_distrib_1dimensional       = len(distrib.shape)              == 1
 
 	if is_distrib_1dimensional:
-		assert is_null_distrib_1dimensional, "If the distribution is 1-dimensional, then the null distribution must also e one-dimensional"
+		assert is_null_distrib_1dimensional, "If the distribution passed to ot_heterogeneity_from_null_distrib is 1-dimensional, then the null distribution must also e one-dimensional"
 
 	num_categories = 1 if is_distrib_1dimensional else distrib.shape[0]
 	size           = distrib.shape[0] if is_distrib_1dimensional else distrib.shape[1]
@@ -137,21 +138,21 @@ def ot_heterogeneity_from_null_distrib(
 	num_dimensions = 1 if not has_direction else unitary_direction_matrix.shape[0]
 	results        = ot_heterogeneity_results(size, num_categories, num_dimensions, has_direction)
 
-	assert len(distrib.shape) <= 2, f"The distribution (distrib) can only be 1 or 2-dimensional, the shape given was { distrib.shape }"
-	assert null_distrib.shape in [(size,), (num_categories, size)], f"The null distribution (null_distrib) must be of shape ({ size },) or ({ num_categories }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { null_distrib.shape }"
-	assert distance_mat.shape == (size, size), f"The distance matrix (distance_mat) must be a square matrix of shape ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { distance_mat.shape }"
+	assert len(distrib.shape) <= 2, f"The distribution (distrib) passed to ot_heterogeneity_from_null_distrib can only be 1 or 2-dimensional, the shape given was { distrib.shape }"
+	assert null_distrib.shape in [(size,), (num_categories, size)], f"The null distribution (null_distrib) passed to ot_heterogeneity_from_null_distrib must be of shape ({ size },) or ({ num_categories }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { null_distrib.shape }"
+	assert distance_mat.shape == (size, size), f"The distance matrix (distance_mat) passed to ot_heterogeneity_from_null_distrib must be a square matrix of shape ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { distance_mat.shape }"
 	if transport_plan is not None:
 		if is_distrib_1dimensional:
-			assert transport_plan.shape in [(size, size), (1, size, size)], f"The transport plane (transport_plan) passed must be of shape (1, { size }, { size }) or ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plan.shape }"
+			assert transport_plan.shape in [(size, size), (1, size, size)], f"The transport plane (transport_plan) passed to ot_heterogeneity_from_null_distrib must be of shape (1, { size }, { size }) or ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plan.shape }"
 		else:
-			assert transport_plan.shape == (num_categories, size, size), f"The transport plane (transport_plan) passed must be of shape ({ num_categories }, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plan.shape }"
+			assert transport_plan.shape == (num_categories, size, size), f"The transport plane (transport_plan) passed to ot_heterogeneity_from_null_distrib must be of shape ({ num_categories }, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { transport_plan.shape }"
 	if unitary_direction_matrix is not None:
-		assert unitary_direction_matrix.shape == (num_dimensions, size, size), f"The unitary direction matrix (unitary_direction_matrix) passed must be of shape (num_dimensions, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { unitary_direction_matrix.shape }"
+		assert unitary_direction_matrix.shape == (num_dimensions, size, size), f"The unitary direction matrix (unitary_direction_matrix) passed to ot_heterogeneity_from_null_distrib must be of shape (num_dimensions, { size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { unitary_direction_matrix.shape }"
 	if local_weight_distrib is not None:
-		assert local_weight_distrib.shape == (size,), f"The local weight distribution (local_weight_distrib) must be a 1-d array of length { size } given the distribution was of shape { distrib.shape }, the shape given was { local_weight_distrib.shape }"
+		assert local_weight_distrib.shape == (size,), f"The local weight distribution (local_weight_distrib) passed to ot_heterogeneity_from_null_distrib must be a 1-d array of length { size } given the distribution was of shape { distrib.shape }, the shape given was { local_weight_distrib.shape }"
 	if category_weights is not None:
-		assert not is_distrib_1dimensional, "Cannot pass a category weight vector (category_weights) if the distribution is 1-dimensional"
-		assert category_weights.shape == (num_categories,), f"The lcategory weight vector (category_weights) must be a 1-d array of length { num_categories } given the distribution was of shape { distrib.shape }, the shape given was { category_weights.shape }"
+		assert not is_distrib_1dimensional, "Cannot pass a category weight vector (category_weights) to ot_heterogeneity_from_null_distrib if the distribution is 1-dimensional"
+		assert category_weights.shape == (num_categories,), f"The lcategory weight vector (category_weights) passed to ot_heterogeneity_from_null_distrib must be a 1-d array of length { num_categories } given the distribution was of shape { distrib.shape }, the shape given was { category_weights.shape }"
 
 	total_weight = _np.sum(distrib) if category_weights is None else _np.sum(category_weights)
 
@@ -271,7 +272,7 @@ def ot_heterogeneity_populations(
 	is_distrib_1dimensional = len(distrib.shape) == 1
 
 	if total_population_distrib is None:
-		assert not is_distrib_1dimensional, "A reference distribution (total_population_distrib) must be passed to ot_heterogeneity_populations if the distribution (distrib) is 1-dimensional"
+		assert not is_distrib_1dimensional, "The reference distribution (total_population_distrib) passed to ot_heterogeneity_populations must be passed to ot_heterogeneity_populations if the distribution (distrib) is 1-dimensional"
 		null_distrib = _np.sum(distrib, axis=0)
 	else:
 		null_distrib = total_population_distrib / _np.sum(total_population_distrib) * _np.sum(distrib)
@@ -320,3 +321,56 @@ def ot_heterogeneity_linear_regression(
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
 		min_value_avoid_zeros=min_value_avoid_zeros, ot_solve_kwargs=ot_solve_kwargs
 	), regression
+
+def compute_optimal_service_improvement(
+	distrib: _np.array, null_distrib: _np.array, distance_mat: _np.array, alpha: float,
+	return_transport_plan: bool=False, epsilon_exponent: float=-1e-3,
+	use_same_exponent_weight: bool=True, ot_solve_kwargs : dict={}
+):
+	'''
+	The compute_optimal_service_improvement function tells you where to optimaly improve services (ex.: number of general
+	practitioners) based on an existing service distribution (distrib), the optimal distribution i.e distiburion of real
+	demand (null_distrib) and a distance matrix.
+
+	Parameters:
+		distrib (np.array): 1d-array of length `size` representing the existing distribution of services.
+		null_distrib (np.array): 1d-array of length `size` representing the null distribution i.e the ideal distribution
+			of services, or the distribution of real demand (typically population).
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) representing the distance between each locality.
+		alpha (float): Amount of relative imrpovement, if set to 0.5 then the total amount of services quantified in the
+			distribution will be allowed to increase by half of the existing amount.
+
+	Optional parameters:
+		return_transport_plan (bool): if true, the function will also return the transport plane.
+		epsilon_exponent (float): the distance matrix is exponentiated (element-wise) by an exponent 1+`epsilon_exponent`
+		ot_solve_kwargs (dict): list of additional argument to pass to the ot.solve function that is used as a backend.
+
+	Returns:
+		service_improvement (np.array): Array of where to add services, as a proportion of the total (thus the sum of
+			this array equals alpha).
+		transport_plan (np.array): 2d array of shape (`size`, `size`) if distrib is only 1d. Element of index (n, i, j)
+			reprensents the flux of population n from locality i to locality j. Returned only if return_transport_plan
+			is true.
+	'''
+
+	assert alpha >= 0, f"The alpha coefficient passed to compute_optimal_service_improvement must be positive, { alpha } was given"
+	assert len(distrib.shape) == 1, f"The distribution in compute_optimal_service_improvment can only be 1, the shape given was { distrib.shape }"
+	assert distrib.shape == null_distrib.shape, f"The shape of the distribution and null distiburion in compute_optimal_service_improvmentcan must match, the shape given was { distrib.shape } and { null_distrib.shape }"
+	size = distrib.shape[0]
+	assert distance_mat.shape == (size, size), f"The distance matrix (distance_mat) passed to compute_optimal_service_improvment must be a square matrix of shape ({ size }, { size }) given the distribution was of shape { distrib.shape }, the shape given was { distance_mat.shape }"
+
+	alpha_exponent = 1 + epsilon_exponent
+	distance_mat_alpha = _np.pow(distance_mat, alpha_exponent)
+
+	distance_matrix_improvement = _np.concat((distance_mat_alpha, _np.zeros((1, size))), axis=0)
+
+	distribution_to    = _np.concat((distrib, [alpha])) / (_np.sum(distrib) + alpha)
+	distributions_from = null_distrib / _np.sum(null_distrib)
+
+	transport_plan      = _ot.solve(distance_matrix_improvement, distribution_to, distributions_from, **ot_solve_kwargs).plan
+	service_improvement = transport_plan[ -1, :] * (1 + alpha)
+	real_transport_plan = transport_plan[:-1, :] + _np.diag(service_improvement)
+
+	if return_transport_plan:
+		return service_improvement, real_transport_plan
+	return service_improvement
