@@ -1,5 +1,6 @@
 import numpy as _np
 import ot as _ot
+import networkx as _nx
 import collections as _collections
 
 def compute_optimal_transport_flux(
@@ -337,3 +338,132 @@ def compute_cumulative_neighbor_cost(distance_mat: _np.array, measure: _np.array
 		accumulated_values[index_mat.T, sorted_indeces] = unsorted_accumulated_values
 		return accumulated_values
 	return unsorted_accumulated_values
+
+def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.array,
+	distance_threshold: float=0, distance_percentile: float=0,
+	distance_population_percentile: float=0, min_num_neighbors: int=0
+):
+	'''
+	The get_sparce_distance_matrix_indeces returns a list of indeces of distances that should be computed
+	exactly using a costly estimate (for example based on travel time) based on a cheaper dense distance matrix
+	to obtain a sparce matrix that can then be efficiently filled using the densify_sparse_distance_matrix
+	function.
+
+	Parameters:
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the original distance between
+			each location.
+		population (np.array): array of length `size` containing population of each locality, used for the
+			distance population precentile rule. This variable will not be used if
+			distance_population_percentile is not strictly positive.
+
+	Optional parameters:
+		distance_threshold (float): distance threshold, so that any two locality quicker than this distance
+			will be marked to compute.
+		distance_percentile (float): distance percentile, to guarantee that at least the n^th percentiles
+			of closest pairs of localities get their distances computed.
+		distance_population_percentile (float): percentile of the pairs of locality for which the distance
+			will be computed based on the index d_ij / sqrt(P_i * P_j) 
+		min_num_neighbors (int): minimum number or neighbor to which each locality has to be connected.
+	
+	Returns:
+		cumulative_neighbor_cost (np.array): 2d-array of shape (2, N) with 0 <= N <= size*size filled with
+			indeces of localities between which distance should be computed.
+	'''
+	assert len(distance_mat.shape) == 2, f"distance matrix passed to get_sparse_distance_matrix_indeces must be a 2-dimensional array, array of shape { distance_mat.shape } was given"
+	assert distance_mat.shape[0] == distance_mat.shape[1], f"distance matrix passed to get_sparse_distance_matrix_indeces must be a square matrix, array of shape { distance_mat.shape } was given"
+
+	size = distance_mat.shape[0]
+
+	indeces           = _np.zeros((2, size, size), dtype=int)
+	indeces[0, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=1), size, axis=1)
+	indeces[1, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=0), size, axis=0)
+	triangular_matrix = indeces[0, :, :] > indeces[1, :, :]
+	do_compute_matrix = _np.zeros((size, size), dtype=bool)
+
+	flattened_distances = distance_mat[triangular_matrix].flatten()
+
+	if distance_percentile > 0:
+		distance_threshold = max(distance_threshold, _np.percentile(flattened_distances, distance_percentile))
+
+	if distance_threshold > 0:
+		flattened_do_compute = flattened_distances < distance_threshold
+		do_compute_matrix[
+			indeces[0, :, :][triangular_matrix].flatten()[flattened_do_compute],
+			indeces[1, :, :][triangular_matrix].flatten()[flattened_do_compute]
+		] = True
+
+	if distance_population_percentile > 0:
+		assert len(population.shape) == 1, f"population array passed to get_sparse_distance_matrix_indeces must be a 1-dimensional array, an array of shape { population.shape }  was given"
+		assert population.shape[0] == size, f"population array passed to get_sparse_distance_matrix_indeces missmatch with the distance matrix shape { population.shape }  and { distance_mat.shape } was given"
+
+		population_index_matrix    = _np.sqrt(_np.repeat(_np.expand_dims(population, axis=0), size, axis=0) * _np.repeat(_np.expand_dims(population, axis=1), size, axis=1))
+		flattened_population_index = population_index_matrix[triangular_matrix].flatten()
+		min_non_zero_population    = _np.min(flattened_population_index[flattened_population_index > 0])
+		flattened_population_index[flattened_population_index == 0] = min_non_zero_population / 10
+
+		flattened_distances_population_index     = flattened_population_index * flattened_distances
+		flattened_distances_population_threshold = _np.percentile(flattened_distances_population_index, distance_population_percentile)
+		flattened_do_compute                     = flattened_distances_population_index < flattened_distances_population_threshold
+		do_compute_matrix[
+			indeces[0, :, :][triangular_matrix].flatten()[flattened_do_compute],
+			indeces[1, :, :][triangular_matrix].flatten()[flattened_do_compute]
+		] = True
+
+	if min_num_neighbors > 0:
+		neighbor_index_matrix = compute_neighbor_index_matrix(distance_mat)
+		is_neighbor_matrix    = neighbor_index_matrix <= min_num_neighbors
+
+		is_neighbor_matrix = (is_neighbor_matrix | is_neighbor_matrix.T) & triangular_matrix
+		do_compute_matrix  = do_compute_matrix | is_neighbor_matrix
+
+	return indeces[:, do_compute_matrix]
+
+def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: bool=True):
+	'''
+	The densify_sparse_distance_matrix creates a dense distance matrix from a sparse cost matrix.
+
+	Parameters:
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with a sparse set fo
+			distances between locations. We assume that except for self-connection, a distance
+			equal to zero means no connection, so if you want to indicate that two localities
+			have a zero transportation cost, please pass a small but non-zero value instead.
+
+	Optional parameters:
+		assume_symetrical (bool): asume that the underlying matrix is symetrical, thus the matrix
+			can be symetrized base on the maximum of distance_mat and its transpose.
+
+	Returns:
+		distance_mat (np.array): 2d-array representing the full distance matrix by filling the
+			missing distances using pathfinding.
+	'''
+
+	assert len(distance_mat.shape) == 2, f"distance matrix passed to densify_sparse_distance_matrix must be a 2-dimensional array, array of shape { distance_mat.shape } was given"
+	assert distance_mat.shape[0] == distance_mat.shape[1], f"distance matrix passed to densify_sparse_distance_matrix must be a square matrix, array of shape { distance_mat.shape } was given"
+
+	size = distance_mat.shape[0]
+
+	sparse_distance_mat = _np.copy(distance_mat)
+	if assume_symetrical:
+		sparse_distance_mat = _np.maximum(sparse_distance_mat, sparse_distance_mat.T)
+
+	graph =  _nx.Graph()
+	graph.add_nodes_from(_np.arange(size))
+
+	indeces           = _np.zeros((2, size, size), dtype=int)
+	indeces[0, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=1), size, axis=1)
+	indeces[1, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=0), size, axis=0)
+	non_zero_indeces      = indeces[:, sparse_distance_mat > 0]
+	non_zero_distance_mat = sparse_distance_mat[sparse_distance_mat > 0]
+
+	weighted_edges = _np.concatenate((non_zero_indeces.T, _np.expand_dims(non_zero_distance_mat, axis=1)), axis=1)
+
+	graph.add_weighted_edges_from(weighted_edges)
+	shortest_path_res = dict(_nx.all_pairs_dijkstra_path_length(graph))
+
+	dense_distance_matrix = _np.zeros((size, size))
+	for i in range(size):
+		shortest_path_res_i = shortest_path_res[i] 
+		for j in range(size):
+			dense_distance_matrix[i, j] = shortest_path_res_i[j]
+
+	return dense_distance_matrix
