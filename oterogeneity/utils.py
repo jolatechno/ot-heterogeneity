@@ -104,7 +104,7 @@ def compute_distance_matrix_polar(
 	Optional parameters:
 		radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
 		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
-		"arcmin", or "arcsec".
+			"arcmin", or "arcsec".
 
 	Returns:
 		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the distance between each location.
@@ -209,7 +209,7 @@ def compute_unitary_direction_matrix_polar(
 			between each location. If not passed it will be computed and returned.
 		radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
 		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
-		"arcmin", or "arcsec".
+			"arcmin", or "arcsec".
 	
 	Returns:
 		unitary_direction_matrix (np.array): 3d-array of shape (`num_categories`, `size`, `size`) representing the
@@ -252,6 +252,9 @@ def compute_unitary_direction_matrix_polar(
 			(latitudes_left   - latitudes_right )**2 +
 			((longitudes_left - longitudes_right)**2)*_np.cos(latitudes_left)*_np.cos(latitudes_right)
 		) * radius
+	else:
+		assert len(distance_mat.shape) == 2, f"distance_mat passed to compute_unitary_direction_matrix_polar must be a 2-dimensional array, array of shape { distance_mat.shape } was given"
+		assert distance_mat.shape == (size, size), f"distance_mat passed to compute_unitary_direction_matrix_polar must be a 2-dimensional square array of size ({ size }, { size }) given that latitudes was of size { size }, array of shape { distance_mat.shape } was given"
 
 	distance_mat_is_zero = distance_mat == 0
 	distance_mat[distance_mat_is_zero] = 1
@@ -339,7 +342,7 @@ def compute_cumulative_neighbor_cost(distance_mat: _np.array, measure: _np.array
 		return accumulated_values
 	return unsorted_accumulated_values
 
-def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.array,
+def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.array=None,
 	distance_threshold: float=0, distance_percentile: float=0,
 	distance_population_percentile: float=0, min_num_neighbors: int=0
 ):
@@ -352,11 +355,11 @@ def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.
 	Parameters:
 		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the original distance between
 			each location.
-		population (np.array): array of length `size` containing population of each locality, used for the
-			distance population precentile rule. This variable will not be used if
-			distance_population_percentile is not strictly positive.
 
 	Optional parameters:
+		population (np.array): array of length `size` containing population of each locality, used for the
+			distance population precentile rule. This variable does not need to be passed if
+			distance_population_percentile is not strictly positive.
 		distance_threshold (float): distance threshold, so that any two locality quicker than this distance
 			will be marked to compute.
 		distance_percentile (float): distance percentile, to guarantee that at least the n^th percentiles
@@ -366,8 +369,8 @@ def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.
 		min_num_neighbors (int): minimum number or neighbor to which each locality has to be connected.
 	
 	Returns:
-		cumulative_neighbor_cost (np.array): 2d-array of shape (2, N) with 0 <= N <= size*size filled with
-			indeces of localities between which distance should be computed.
+		do_compute_matrix (np.array): 2d-array of shape (size, size) equal to 1 where distance should be
+			compute, 0 everywhere else.
 	'''
 	assert len(distance_mat.shape) == 2, f"distance matrix passed to get_sparse_distance_matrix_indeces must be a 2-dimensional array, array of shape { distance_mat.shape } was given"
 	assert distance_mat.shape[0] == distance_mat.shape[1], f"distance matrix passed to get_sparse_distance_matrix_indeces must be a square matrix, array of shape { distance_mat.shape } was given"
@@ -393,6 +396,7 @@ def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.
 		] = True
 
 	if distance_population_percentile > 0:
+		assert population is not None, f"population array was not passed to get_sparse_distance_matrix_indeces, though distance_population_percentile is positive."
 		assert len(population.shape) == 1, f"population array passed to get_sparse_distance_matrix_indeces must be a 1-dimensional array, an array of shape { population.shape }  was given"
 		assert population.shape[0] == size, f"population array passed to get_sparse_distance_matrix_indeces missmatch with the distance matrix shape { population.shape }  and { distance_mat.shape } was given"
 
@@ -416,7 +420,7 @@ def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.
 		is_neighbor_matrix = (is_neighbor_matrix | is_neighbor_matrix.T) & triangular_matrix
 		do_compute_matrix  = do_compute_matrix | is_neighbor_matrix
 
-	return indeces[:, do_compute_matrix]
+	return do_compute_matrix
 
 def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: bool=True):
 	'''
@@ -467,3 +471,116 @@ def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: b
 			dense_distance_matrix[i, j] = shortest_path_res_i[j]
 
 	return dense_distance_matrix
+
+def compute_travel_time_matrix(
+	latitudes: _np.array, longitudes: _np.array,
+	do_compute_matrix: _np.array=None, travel_type="car",  unit: str="deg"
+):
+	'''
+	The compute_travel_time_matrix creates a travel time matrix that can be either sparse or dense.
+
+	Parameters:
+		latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
+		longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+
+	Optional parameters:
+		do_compute_matrix (np.array): 2d-array of shape (size, size) equal to 1 where distance should be
+			compute, 0 everywhere else.
+		travel_type (str): travel mode for which travel time should be computed, can be either TODO.
+		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
+			"arcmin", or "arcsec".
+
+	Returns:
+		travel_time_mat (np.array): 2d-array of shape (size, size) representing the full travel-time distance
+			matrix.
+	'''
+
+	assert len(latitudes.shape) == 1, f"latitudes passed to compute_travel_time_matrix must be a 1-dimensional array, array of shape { latitudes.shape } was given"
+	assert len(longitudes.shape) == 1, f"longitudes passed to compute_travel_time_matrix must be a 1-dimensional array, array of shape { longitudes.shape } was given"
+	assert longitudes.shape == latitudes.shape, f"longitudes and latitudes passed to compute_travel_time_matrix must match in size, { latitudes.shape } and { longitudes.shape } was given"
+	
+	size = len(latitudes)
+
+	travel_time_matrix = np.zeros((size, size))
+
+	conversion_factors = {
+		"rad"    : 180/_np.pi,
+		"deg"    : 1,
+		"arcmin" : 60,
+		"arcsec" : 3600,
+	}
+
+	assert unit in list(conversion_factors.keys()), f"unit passed to compute_travel_time_matrix must be one of { list(conversion_factors.keys()) }, \"{ unit }\" was given"
+	
+	conversion_factor = conversion_factors[unit]
+
+	travel_types = {
+		"car" : None
+	}
+
+	assert travel_type in list(travel_types.keys()), f"travel_type passed to compute_travel_time_matrix must be one of { list(travel_types.keys()) }, \"{ unit }\" was given"
+
+	# TODO
+
+	return travel_time_matrix
+
+def compute_sparse_travel_time_matrix(
+	latitudes: _np.array, longitudes: _np.array, population: _np.array=None,
+	distance_mat: _np.array=None, radius: float=6378137, unit: str="deg",
+	distance_threshold: float=0, distance_percentile: float=0,
+	distance_population_percentile: float=0, min_num_neighbors: int=0,
+	travel_type="car"
+):
+	'''
+	The compute_sparse_travel_time_matrix efficiently creates a dense travel time matrix using a combinaison
+	of get_sparse_distance_matrix_indeces, compute_travel_time_matrix and densify_sparse_distance_matrix.
+
+	Parameters:
+		latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
+		longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+
+	Optional parameters:
+		population (np.array): array of length `size` containing population of each locality, used for the
+			distance population precentile rule. This variable does not need to be passed if
+			distance_population_percentile is not strictly positive.
+		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the original distance between
+			each location.
+		radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
+		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
+			"arcmin", or "arcsec".
+		population (np.array): array of length `size` containing population of each locality, used for the
+			distance population precentile rule. This variable does not need to be passed if
+			distance_population_percentile is not strictly positive.
+		distance_threshold (float): distance threshold, so that any two locality quicker than this distance
+			will be marked to compute.
+		distance_percentile (float): distance percentile, to guarantee that at least the n^th percentiles
+			of closest pairs of localities get their distances computed.
+		distance_population_percentile (float): percentile of the pairs of locality for which the distance
+			will be computed based on the index d_ij / sqrt(P_i * P_j) 
+		min_num_neighbors (int): minimum number or neighbor to which each locality has to be connected.
+		travel_type (str): travel mode for which travel time should be computed, can be either TODO.
+	
+	Returns:
+		travel_time_mat (np.array): 2d-array of shape (size, size) representing the full travel-time distance
+			matrix.
+		do_compute_matrix (np.array): 2d-array of shape (size, size) equal to 1 where distances were
+			computed exactly, 0 where it was obtained by pathfinding.
+	'''
+
+	assert len(latitudes.shape) == 1, f"latitudes passed to compute_sparse_travel_time_matrix must be a 1-dimensional array, array of shape { latitudes.shape } was given"
+	assert len(longitudes.shape) == 1, f"longitudes passed to compute_sparse_travel_time_matrix must be a 1-dimensional array, array of shape { longitudes.shape } was given"
+	assert longitudes.shape == latitudes.shape, f"longitudes and latitudes passed to compute_sparse_travel_time_matrix must match in size, { latitudes.shape } and { longitudes.shape } was given"
+
+	if distance_mat is None:
+		distance_mat = compute_distance_matrix_polar(latitudes, longitudes, radius, unit)
+	else:
+		assert len(distance_mat.shape) == 2, f"distance_mat passed to compute_sparse_travel_time_matrix must be a 2-dimensional array, array of shape { distance_mat.shape } was given"
+		assert distance_mat.shape == (size, size), f"distance_mat passed to compute_sparse_travel_time_matrix must be a 2-dimensional square array of size ({ size }, { size }) given that latitudes was of size { size }, array of shape { distance_mat.shape } was given"
+
+	do_compute_matrix = get_sparse_distance_matrix_indeces(distance_mat, population, distance_threshold, distance_percentile, distance_population_percentile, min_num_neighbors)
+
+	sparse_travel_time_matrix = compute_travel_time_matrix(latitudes, longitudes, do_compute_matrix, travel_type, unit, traveltime_kwargs)
+
+	travel_time_matrix = densify_sparse_distance_matrix(sparse_travel_time_matrix)
+
+	return travel_time_matrix, do_compute_matrix
