@@ -12,8 +12,9 @@ dependencies = [
 	"numpy",
 	"scikit-learn",
 	"pot",
-	"networkx"
-#	"OpenRouteService"
+	"networkx",
+	"scipy",
+	"openrouteservice"
 ]
 requires-python = ">= 3.8"
 authors = [

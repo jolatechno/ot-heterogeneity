@@ -1,7 +1,10 @@
 import numpy as _np
 import ot as _ot
-import networkx as _nx
 import collections as _collections
+import openrouteservice as _ors
+import time as _time
+from scipy.sparse import lil_matrix as _lil_matrix
+import networkx as _nx
 
 def compute_optimal_transport_flux(
 	distributions_to: _np.array, distributions_from: _np.array, distance_mat: _np.array,
@@ -423,6 +426,9 @@ def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.
 	return do_compute_matrix
 
 def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: bool=True):
+	# Import now as it can't be included by pip :
+	import graph_tool.all as _gt
+
 	'''
 	The densify_sparse_distance_matrix creates a dense distance matrix from a sparse cost matrix.
 
@@ -450,9 +456,6 @@ def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: b
 	if assume_symetrical:
 		sparse_distance_mat = _np.maximum(sparse_distance_mat, sparse_distance_mat.T)
 
-	graph =  _nx.Graph()
-	graph.add_nodes_from(_np.arange(size))
-
 	indeces           = _np.zeros((2, size, size), dtype=int)
 	indeces[0, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=1), size, axis=1)
 	indeces[1, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=0), size, axis=0)
@@ -461,20 +464,37 @@ def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: b
 
 	weighted_edges = _np.concatenate((non_zero_indeces.T, _np.expand_dims(non_zero_distance_mat, axis=1)), axis=1)
 
-	graph.add_weighted_edges_from(weighted_edges)
-	shortest_path_res = dict(_nx.all_pairs_dijkstra_path_length(graph))
+	try:
+		import graph_tool.all as _gt
 
-	dense_distance_matrix = _np.zeros((size, size))
-	for i in range(size):
-		shortest_path_res_i = shortest_path_res[i] 
-		for j in range(size):
-			dense_distance_matrix[i, j] = shortest_path_res_i[j]
+		graph       = _gt.Graph(directed=not assume_symetrical)
+		edge_weight = graph.new_ep("double")
+		graph.add_edge_list(weighted_edges, eprops=[edge_weight])
 
-	return dense_distance_matrix
+		dense_distance_matrix = _np.array(_gt.shortest_distance(graph, weights=edge_weight))
+
+		return dense_distance_matrix
+	except Exception as e:
+		print("graph_tool.all backend failed in densify_sparse_distance_matrix, falling back to netwrokx. Error is : ", e)
+
+		graph =  _nx.Graph()
+		graph.add_nodes_from(_np.arange(size))
+		graph.add_weighted_edges_from(weighted_edges)
+
+		shortest_path_res = dict(_nx.all_pairs_dijkstra_path_length(graph))
+
+		dense_distance_matrix = _np.zeros((size, size))
+		for i in range(size):
+			shortest_path_res_i = shortest_path_res[i] 
+			for j in range(size):
+				dense_distance_matrix[i, j] = shortest_path_res_i[j]
+
+		return dense_distance_matrix
 
 def compute_travel_time_matrix(
-	latitudes: _np.array, longitudes: _np.array,
-	do_compute_matrix: _np.array=None, travel_type="car",  unit: str="deg"
+	latitudes: _np.array, longitudes: _np.array, ors_client: _ors.client.Client, do_compute_matrix: _np.array=None,
+	compute_two_way: bool=True, return_distances: bool=False, travel_type="driving-car", unit: str="deg",
+	ors_max_request: int=3499, ors_rate_limit: float=39, ors_optimize: bool=True, ors_kwargs: dict={}
 ):
 	'''
 	The compute_travel_time_matrix creates a travel time matrix that can be either sparse or dense.
@@ -482,26 +502,51 @@ def compute_travel_time_matrix(
 	Parameters:
 		latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
 		longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+		ors_client (openrouteservice.client.Client): openrouteservice client that is obtained using
+			openrouteservice.Client() 
 
 	Optional parameters:
 		do_compute_matrix (np.array): 2d-array of shape (size, size) equal to 1 where distance should be
 			compute, 0 everywhere else.
-		travel_type (str): travel mode for which travel time should be computed, can be either TODO.
+		compute_two_way (bool): wether to compute travel both way or compute only one direction and assume
+			travel is as costly going both way. Is ignored when passing do_compute_matrix.
+		return_distances (bool): if true will return real travel distances in meters rather than travel time.
+		travel_type (str): travel mode for which travel time should be computed, can be one of "driving-car",
+			"driving-hgv", "foot-walking", "foot-hiking", "cycling-regular", "cycling-road", "cycling-safe",
+			"cycling-mountain", "cycling-tour" or "cycling-electric".
 		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
 			"arcmin", or "arcsec".
+		ors_max_request (int): maximum number of requests per call, default is 3499
+		ors_rate_limit (float): maximum number of request per minutes, default is 39
+		ors_optimize (bool): wether to minimize the number of request by batching request, which causes the
+			matrix to be less sparse. This is a positive side-effect so it's set to True by default.
+		ors_kwargs (dict): additional arguments passed to ors_client.distance_matrix()
 
 	Returns:
 		travel_time_mat (np.array): 2d-array of shape (size, size) representing the full travel-time distance
-			matrix.
+			matrix in seconds.
+		do_compute_matrix (np.array): 2d-array of shape (size, size) equal to 1 where distance were actually
+			computed, 0 everywhere else.
 	'''
 
 	assert len(latitudes.shape) == 1, f"latitudes passed to compute_travel_time_matrix must be a 1-dimensional array, array of shape { latitudes.shape } was given"
 	assert len(longitudes.shape) == 1, f"longitudes passed to compute_travel_time_matrix must be a 1-dimensional array, array of shape { longitudes.shape } was given"
 	assert longitudes.shape == latitudes.shape, f"longitudes and latitudes passed to compute_travel_time_matrix must match in size, { latitudes.shape } and { longitudes.shape } was given"
 	
-	size = len(latitudes)
+	size = len(latitudes)	
 
-	travel_time_matrix = np.zeros((size, size))
+	_do_compute_matrix = _np.copy(do_compute_matrix)
+	if _do_compute_matrix is None:
+		indeces           = _np.zeros((2, size, size), dtype=int)
+		indeces[0, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=1), size, axis=1)
+		indeces[1, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=0), size, axis=0)
+		if compute_two_way:
+			_do_compute_matrix = indeces[0, :, :] != indeces[1, :, :]
+		else:
+			_do_compute_matrix = indeces[0, :, :] > indeces[1, :, :]
+	else:
+		assert len(_do_compute_matrix.shape) == 2, f"do_compute_matrix passed to compute_travel_time_matrix must be a 2-dimensional array, array of shape { do_compute_matrix.shape } was given"
+		assert _do_compute_matrix.shape == (size, size), f"do_compute_matrix passed to compute_travel_time_matrix must be a 2-dimensional square array of size ({ size }, { size }) given that latitudes was of size { size }, array of shape { do_compute_matrix.shape } was given"
 
 	conversion_factors = {
 		"rad"    : 180/_np.pi,
@@ -513,23 +558,71 @@ def compute_travel_time_matrix(
 	assert unit in list(conversion_factors.keys()), f"unit passed to compute_travel_time_matrix must be one of { list(conversion_factors.keys()) }, \"{ unit }\" was given"
 	
 	conversion_factor = conversion_factors[unit]
+	long_lat = _np.concatenate((_np.expand_dims(longitudes,  axis=1), _np.expand_dims(latitudes,  axis=1)), axis=1)*conversion_factor
 
-	travel_types = {
-		"car" : None
-	}
+	travel_types = ["driving-car", "driving-hgv", "foot-walking", "foot-hiking", "cycling-regular", "cycling-road", "cycling-safe", "cycling-mountain", "cycling-tour", "cycling-electric"]
+	assert travel_type in travel_types, f"travel_type passed to compute_travel_time_matrix must be one of { travel_types }, \"{ unit }\" was given"
 
-	assert travel_type in list(travel_types.keys()), f"travel_type passed to compute_travel_time_matrix must be one of { list(travel_types.keys()) }, \"{ unit }\" was given"
+	travel_time_matrix = _np.zeros((size, size))
 
-	# TODO
+	sources = list(range(size))[::-1]
+	while len(sources) > 0:
+		sources_to_compute, destinations_to_compute = [], []
+		while len(sources_to_compute) * len(destinations_to_compute) < ors_max_request and len(sources) > 0:
+			sources_to_compute.append(sources.pop())
+			new_destinations_to_compute = _np.arange(size)[_np.sum(_do_compute_matrix[sources_to_compute, :], axis=0, dtype=bool)].tolist()
+			if not ors_optimize:
+				destinations_to_compute = new_destinations_to_compute
+				break
+			if len(sources_to_compute) * len(destinations_to_compute) > 2*ors_max_request:
+				sources.append(sources_to_compute.pop())
+				break
+			destinations_to_compute = new_destinations_to_compute
 
-	return travel_time_matrix
+		_do_compute_matrix[
+			_np.repeat(_np.expand_dims(_np.array(sources_to_compute),      axis=1), len(destinations_to_compute), axis=1),
+			_np.repeat(_np.expand_dims(_np.array(destinations_to_compute), axis=0), len(sources_to_compute),      axis=0)
+		] = 1
+
+		while True:
+			start_time = _time.time()
+
+			n_to_compute = min(int(_np.floor(ors_max_request//len(sources_to_compute))), len(destinations_to_compute))
+			if n_to_compute == 0:
+				break
+			this_destination, destinations_to_compute = destinations_to_compute[:n_to_compute], destinations_to_compute[n_to_compute:]
+			
+			travel_time_results = ors_client.distance_matrix(
+				locations=long_lat.tolist(),
+				sources=sources_to_compute, destinations=this_destination,
+				metrics=["distance"] if return_distances else ["duration"],
+				profile=travel_type, units="m", **ors_kwargs
+			)["distances" if return_distances else "durations"]
+
+			travel_time_matrix[
+				_np.repeat(_np.expand_dims(_np.array(sources_to_compute), axis=1), len(this_destination),   axis=1),
+				_np.repeat(_np.expand_dims(_np.array(this_destination),   axis=0), len(sources_to_compute), axis=0)
+			] = _np.array(travel_time_results)
+
+			end_time_ = _time.time()
+			sleep_time = 1 / ors_rate_limit - (end_time_ - start_time)
+			if sleep_time > 0:
+				_time.sleep(sleep_time)
+
+	if _do_compute_matrix is None and not compute_two_way:
+		travel_time_matrix += travel_time_matrix.T
+
+	return travel_time_matrix, _do_compute_matrix
 
 def compute_sparse_travel_time_matrix(
-	latitudes: _np.array, longitudes: _np.array, population: _np.array=None,
-	distance_mat: _np.array=None, radius: float=6378137, unit: str="deg",
+	latitudes: _np.array, longitudes: _np.array, ors_client: _ors.client.Client,
+	population: _np.array=None, distance_mat: _np.array=None,
+	return_distances: bool=False, travel_type="driving-car",
+	radius: float=6378137, unit: str="deg",
 	distance_threshold: float=0, distance_percentile: float=0,
 	distance_population_percentile: float=0, min_num_neighbors: int=0,
-	travel_type="car"
+	ors_max_request: int=3499, ors_rate_limit: float=39,
+	ors_optimize: bool=True, ors_kwargs: dict={}
 ):
 	'''
 	The compute_sparse_travel_time_matrix efficiently creates a dense travel time matrix using a combinaison
@@ -538,6 +631,8 @@ def compute_sparse_travel_time_matrix(
 	Parameters:
 		latitudes (np.array): 1d-array of length `size` with the latitudes of each point.
 		longitudes (np.array): 1d-array of length `size` with the longitudes of each point.
+		ors_client (openrouteservice.client.Client): openrouteservice client that is obtained using
+			openrouteservice.Client() 
 
 	Optional parameters:
 		population (np.array): array of length `size` containing population of each locality, used for the
@@ -545,6 +640,10 @@ def compute_sparse_travel_time_matrix(
 			distance_population_percentile is not strictly positive.
 		distance_mat (np.array): 2d-array of shape (`size`, `size`) filled with the original distance between
 			each location.
+		return_distances (bool): if true will return real travel distances in meters rather than travel time.
+		travel_type (str): travel mode for which travel time should be computed, can be one of "driving-car",
+			"driving-hgv", "foot-walking", "foot-hiking", "cycling-regular", "cycling-road", "cycling-safe",
+			"cycling-mountain", "cycling-tour" or "cycling-electric".
 		radius (float): radius of the sphere (by default 6378137 which is the radius of the earth in meters).
 		unit (str): a string to define the unit of the longitude and latituden, eather "rad", "deg" (default),
 			"arcmin", or "arcsec".
@@ -558,11 +657,15 @@ def compute_sparse_travel_time_matrix(
 		distance_population_percentile (float): percentile of the pairs of locality for which the distance
 			will be computed based on the index d_ij / sqrt(P_i * P_j) 
 		min_num_neighbors (int): minimum number or neighbor to which each locality has to be connected.
-		travel_type (str): travel mode for which travel time should be computed, can be either TODO.
+		ors_max_request (int): maximum number of requests per call, default is 3499
+		ors_rate_limit (float): maximum number of request per minutes, default is 39
+		ors_optimize (bool): wether to minimize the number of request by batching request, which causes the
+			matrix to be less sparse. This is a positive side-effect so it's set to True by default.
+		ors_kwargs (dict): additional arguments passed to ors_client.distance_matrix()
 	
 	Returns:
 		travel_time_mat (np.array): 2d-array of shape (size, size) representing the full travel-time distance
-			matrix.
+			matrix in seconds.
 		do_compute_matrix (np.array): 2d-array of shape (size, size) equal to 1 where distances were
 			computed exactly, 0 where it was obtained by pathfinding.
 	'''
@@ -570,6 +673,8 @@ def compute_sparse_travel_time_matrix(
 	assert len(latitudes.shape) == 1, f"latitudes passed to compute_sparse_travel_time_matrix must be a 1-dimensional array, array of shape { latitudes.shape } was given"
 	assert len(longitudes.shape) == 1, f"longitudes passed to compute_sparse_travel_time_matrix must be a 1-dimensional array, array of shape { longitudes.shape } was given"
 	assert longitudes.shape == latitudes.shape, f"longitudes and latitudes passed to compute_sparse_travel_time_matrix must match in size, { latitudes.shape } and { longitudes.shape } was given"
+
+	size = len(latitudes)
 
 	if distance_mat is None:
 		distance_mat = compute_distance_matrix_polar(latitudes, longitudes, radius, unit)
@@ -579,7 +684,11 @@ def compute_sparse_travel_time_matrix(
 
 	do_compute_matrix = get_sparse_distance_matrix_indeces(distance_mat, population, distance_threshold, distance_percentile, distance_population_percentile, min_num_neighbors)
 
-	sparse_travel_time_matrix = compute_travel_time_matrix(latitudes, longitudes, do_compute_matrix, travel_type, unit, traveltime_kwargs)
+	sparse_travel_time_matrix, do_compute_matrix = compute_travel_time_matrix(
+		latitudes, longitudes, ors_client, do_compute_matrix,
+		False, return_distances, travel_type, unit,
+		ors_max_request, ors_rate_limit, ors_optimize, ors_kwargs
+	)
 
 	travel_time_matrix = densify_sparse_distance_matrix(sparse_travel_time_matrix)
 
