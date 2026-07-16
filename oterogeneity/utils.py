@@ -6,6 +6,7 @@ import time as _time
 from scipy.sparse import lil_matrix as _lil_matrix
 import networkx as _nx
 
+
 def compute_optimal_transport_flux(
 	distributions_to: _np.array, distributions_from: _np.array, distance_mat: _np.array,
 	ot_solve_kwargs : dict={}, force_for_loop : bool=True
@@ -92,6 +93,7 @@ def compute_distance_matrix(coordinates: _np.array, exponent: float=2):
 
 	return distance_mat
 
+
 def compute_distance_matrix_polar(
 	latitudes: _np.array, longitudes: _np.array,
 	radius: float=6378137, unit: str="deg"
@@ -141,6 +143,7 @@ def compute_distance_matrix_polar(
 	) * radius
 
 	return distance_mat
+
 
 def compute_unitary_direction_matrix(
 	coordinates: _np.array, distance_mat: _np.array=None,
@@ -193,6 +196,7 @@ def compute_unitary_direction_matrix(
 	if distance_mat_is_None:
 		return unitary_direction_matrix, distance_mat
 	return unitary_direction_matrix
+
 
 def compute_unitary_direction_matrix_polar(
 	latitudes: _np.array, longitudes: _np.array,
@@ -272,6 +276,7 @@ def compute_unitary_direction_matrix_polar(
 		return unitary_direction_matrix, distance_mat
 	return unitary_direction_matrix
 
+
 def compute_neighbor_index_matrix(distance_mat: _np.array):
 	'''
 	The compute_neighbor_index_matrix function computes the distance matrix corresponding to the neighbor index,
@@ -298,6 +303,7 @@ def compute_neighbor_index_matrix(distance_mat: _np.array):
 	neighbor_index[index_mat.T, sorted_indeces] = index_mat
 
 	return neighbor_index
+
 
 def compute_cumulative_neighbor_cost(distance_mat: _np.array, measure: _np.array, conserve_order: bool=True):
 	'''
@@ -344,6 +350,7 @@ def compute_cumulative_neighbor_cost(distance_mat: _np.array, measure: _np.array
 		accumulated_values[index_mat.T, sorted_indeces] = unsorted_accumulated_values
 		return accumulated_values
 	return unsorted_accumulated_values
+
 
 def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.array=None,
 	distance_threshold: float=0, distance_percentile: float=0,
@@ -425,6 +432,7 @@ def get_sparse_distance_matrix_indeces(distance_mat: _np.array, population: _np.
 
 	return do_compute_matrix
 
+
 def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: bool=True):
 	# Import now as it can't be included by pip :
 	import graph_tool.all as _gt
@@ -491,10 +499,12 @@ def densify_sparse_distance_matrix(distance_mat: _np.array, assume_symetrical: b
 
 		return dense_distance_matrix
 
+
 def compute_travel_time_matrix(
 	latitudes: _np.array, longitudes: _np.array, ors_client: _ors.client.Client, do_compute_matrix: _np.array=None,
 	compute_two_way: bool=True, return_distances: bool=False, travel_type="driving-car", unit: str="deg",
-	ors_max_request: int=3499, ors_rate_limit: float=39, ors_optimize: bool=True, ors_kwargs: dict={}
+	ors_max_request: int=3499, ors_rate_limit: float=39, ors_optimize: bool=True, ors_kwargs: dict={},
+	dry_run: bool=False, verbose: bool=False
 ):
 	'''
 	The compute_travel_time_matrix creates a travel time matrix that can be either sparse or dense.
@@ -521,6 +531,8 @@ def compute_travel_time_matrix(
 		ors_optimize (bool): wether to minimize the number of request by batching request, which causes the
 			matrix to be less sparse. This is a positive side-effect so it's set to True by default.
 		ors_kwargs (dict): additional arguments passed to ors_client.distance_matrix()
+		dry_run (bool): run without rate limit and without making actual API calls.
+		verbose (bool): print some details
 
 	Returns:
 		travel_time_mat (np.array): 2d-array of shape (size, size) representing the full travel-time distance
@@ -535,7 +547,7 @@ def compute_travel_time_matrix(
 	
 	size = len(latitudes)	
 
-	_do_compute_matrix = _np.copy(do_compute_matrix)
+	_do_compute_matrix = do_compute_matrix.astype(bool)
 	if _do_compute_matrix is None:
 		indeces           = _np.zeros((2, size, size), dtype=int)
 		indeces[0, :, :]  = _np.repeat(_np.expand_dims(_np.arange(size), axis=1), size, axis=1)
@@ -565,26 +577,34 @@ def compute_travel_time_matrix(
 
 	travel_time_matrix = _np.zeros((size, size))
 
+	num_calls = 0
 	sources = list(range(size))[::-1]
 	while len(sources) > 0:
 		sources_to_compute, destinations_to_compute = [], []
-		while len(sources_to_compute) * len(destinations_to_compute) < ors_max_request and len(sources) > 0:
+		while len(sources) > 0:
 			sources_to_compute.append(sources.pop())
-			new_destinations_to_compute = _np.arange(size)[_np.sum(_do_compute_matrix[sources_to_compute, :], axis=0, dtype=bool)].tolist()
+			old_destinations_to_compute, destinations_to_compute = destinations_to_compute, _np.arange(size)[_do_compute_matrix[sources_to_compute, :].any(axis=0)].tolist()
 			if not ors_optimize:
-				destinations_to_compute = new_destinations_to_compute
 				break
-			if len(sources_to_compute) * len(destinations_to_compute) > 2*ors_max_request:
-				sources.append(sources_to_compute.pop())
-				break
-			destinations_to_compute = new_destinations_to_compute
+			if len(sources_to_compute) * len(destinations_to_compute) > ors_max_request:
+				if len(sources_to_compute) == 1:
+					break
+				previous_avg = (len(sources_to_compute) - 1) * len(old_destinations_to_compute)
+				new_avg      = len(sources_to_compute) * len(destinations_to_compute)
+				new_avg     /= _np.ceil(new_avg / ors_max_request)
+				if new_avg >= previous_avg:
+					break
+				else:
+					destinations_to_compute = old_destinations_to_compute
+					sources.append(sources_to_compute.pop())
+					break
 
 		_do_compute_matrix[
 			_np.repeat(_np.expand_dims(_np.array(sources_to_compute),      axis=1), len(destinations_to_compute), axis=1),
 			_np.repeat(_np.expand_dims(_np.array(destinations_to_compute), axis=0), len(sources_to_compute),      axis=0)
 		] = 1
 
-		while True:
+		while True:t
 			start_time = _time.time()
 
 			n_to_compute = min(int(_np.floor(ors_max_request//len(sources_to_compute))), len(destinations_to_compute))
@@ -592,27 +612,41 @@ def compute_travel_time_matrix(
 				break
 			this_destination, destinations_to_compute = destinations_to_compute[:n_to_compute], destinations_to_compute[n_to_compute:]
 			
-			travel_time_results = ors_client.distance_matrix(
-				locations=long_lat.tolist(),
-				sources=sources_to_compute, destinations=this_destination,
-				metrics=["distance"] if return_distances else ["duration"],
-				profile=travel_type, units="m", **ors_kwargs
-			)["distances" if return_distances else "durations"]
+			num_calls += 1
+			if dry_run:
+				travel_time_matrix[
+					_np.repeat(_np.expand_dims(_np.array(sources_to_compute), axis=1), len(this_destination),   axis=1),
+					_np.repeat(_np.expand_dims(_np.array(this_destination),   axis=0), len(sources_to_compute), axis=0)
+				] = _np.ones((len(sources_to_compute), len(this_destination)))
+			else:
+				travel_time_results = ors_client.distance_matrix(
+					locations=long_lat.tolist(),
+					sources=sources_to_compute, destinations=this_destination,
+					metrics=["distance"] if return_distances else ["duration"],
+					profile=travel_type, units="m", **ors_kwargs
+				)["distances" if return_distances else "durations"]
 
-			travel_time_matrix[
-				_np.repeat(_np.expand_dims(_np.array(sources_to_compute), axis=1), len(this_destination),   axis=1),
-				_np.repeat(_np.expand_dims(_np.array(this_destination),   axis=0), len(sources_to_compute), axis=0)
-			] = _np.array(travel_time_results)
+				travel_time_matrix[
+					_np.repeat(_np.expand_dims(_np.array(sources_to_compute), axis=1), len(this_destination),   axis=1),
+					_np.repeat(_np.expand_dims(_np.array(this_destination),   axis=0), len(sources_to_compute), axis=0)
+				] = _np.array(travel_time_results)
 
-			end_time_ = _time.time()
-			sleep_time = 60 / ors_rate_limit - (end_time_ - start_time)
-			if sleep_time > 0:
-				_time.sleep(sleep_time)
+				end_time_ = _time.time()
+				sleep_time = 60 / ors_rate_limit - (end_time_ - start_time)
+				if sleep_time > 0:
+					_time.sleep(sleep_time)
+
+	if verbose:
+		print(f"compute_travel_time_matrix { 'would have made' if dry_run else 'made' } { num_calls } calls to OpenRouteService.distance_matrix")
+		if dry_run:
+			print(f"API calls made by compute_travel_time_matrix would have taken { round(num_calls / ors_rate_limit, 1) } minutes with the current rate limit.")
+		print(f"Computed travel between { _np.sum(_do_compute_matrix) } pairs out of { size*(size - 1) }")
 
 	if _do_compute_matrix is None and not compute_two_way:
-		travel_time_matrix += travel_time_matrix.T
+		travel_time_matrix = _np.maximum(travel_time_matrix, travel_time_matrix.T)
 
 	return travel_time_matrix, _do_compute_matrix
+
 
 def compute_sparse_travel_time_matrix(
 	latitudes: _np.array, longitudes: _np.array, ors_client: _ors.client.Client,
@@ -622,7 +656,8 @@ def compute_sparse_travel_time_matrix(
 	distance_threshold: float=0, distance_percentile: float=0,
 	distance_population_percentile: float=0, min_num_neighbors: int=0,
 	ors_max_request: int=3499, ors_rate_limit: float=39,
-	ors_optimize: bool=True, ors_kwargs: dict={}
+	ors_optimize: bool=True, ors_kwargs: dict={},
+	dry_run: bool=False, verbose: bool=False
 ):
 	'''
 	The compute_sparse_travel_time_matrix efficiently creates a dense travel time matrix using a combinaison
@@ -662,6 +697,8 @@ def compute_sparse_travel_time_matrix(
 		ors_optimize (bool): wether to minimize the number of request by batching request, which causes the
 			matrix to be less sparse. This is a positive side-effect so it's set to True by default.
 		ors_kwargs (dict): additional arguments passed to ors_client.distance_matrix()
+		dry_run (bool): run without rate limit and without making actual API calls.
+		verbose (bool): print some details
 	
 	Returns:
 		travel_time_mat (np.array): 2d-array of shape (size, size) representing the full travel-time distance
@@ -687,7 +724,8 @@ def compute_sparse_travel_time_matrix(
 	sparse_travel_time_matrix, do_compute_matrix = compute_travel_time_matrix(
 		latitudes, longitudes, ors_client, do_compute_matrix,
 		False, return_distances, travel_type, unit,
-		ors_max_request, ors_rate_limit, ors_optimize, ors_kwargs
+		ors_max_request, ors_rate_limit, ors_optimize, ors_kwargs,
+		dry_run, verbose
 	)
 
 	travel_time_matrix = densify_sparse_distance_matrix(sparse_travel_time_matrix)

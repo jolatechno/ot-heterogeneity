@@ -3,6 +3,7 @@ import numpy as _np
 from .. import utils as _utils
 from . import _multiscalar_divergences as divergences
 
+
 class multiscalar_results:
 	'''
 	The multiscalar_results class contains all of the results of a computation of spatial heterogeneity based on the
@@ -53,6 +54,7 @@ class multiscalar_results:
 		self.normalization_proportion_trajectory  = _np.zeros((num_categories, size))
 		self.normalization_divergence_trajectory  = _np.zeros(size)
 		self.normalization_integration_trajectory = _np.zeros(size)
+
 
 def compute_multiscalar_normalization_coefficient(
 	results: multiscalar_results, distance_mat: _np.array,

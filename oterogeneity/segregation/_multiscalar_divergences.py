@@ -1,5 +1,6 @@
 import numpy as _np
 
+
 def KL_divergence(array_A: _np.array, array_B: _np.array, min_value_avoid_zeros: float=1e-16):
 	'''
 	The KL_divergence function computes the KL divergence between two array (either 1d or 2d). If one or both array

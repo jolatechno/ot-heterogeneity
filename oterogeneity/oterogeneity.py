@@ -4,6 +4,7 @@ import ot as _ot
 
 from . import utils
 
+
 class ot_heterogeneity_results:
 	'''
 	The ot_heterogeneity_results class contains all of the results of a computation of spatial heterogeneity based on optimal
@@ -284,6 +285,7 @@ def ot_heterogeneity_populations(
 		min_value_avoid_zeros=min_value_avoid_zeros, ot_solve_kwargs=ot_solve_kwargs
 	)
 
+
 def ot_heterogeneity_linear_regression(
 	distrib: _np.array, prediction_distrib: _np.array, distance_mat: _np.array,
 	local_weight_distrib: _np.array=None, transport_plan: _np.array=None,
@@ -321,6 +323,7 @@ def ot_heterogeneity_linear_regression(
 		epsilon_exponent=epsilon_exponent, use_same_exponent_weight=use_same_exponent_weight,
 		min_value_avoid_zeros=min_value_avoid_zeros, ot_solve_kwargs=ot_solve_kwargs
 	), regression
+
 
 def compute_optimal_service_improvement(
 	distrib: _np.array, null_distrib: _np.array, distance_mat: _np.array, alpha: float,
