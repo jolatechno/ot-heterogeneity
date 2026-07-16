@@ -605,7 +605,7 @@ def compute_travel_time_matrix(
 			] = _np.array(travel_time_results)
 
 			end_time_ = _time.time()
-			sleep_time = 1 / ors_rate_limit - (end_time_ - start_time)
+			sleep_time = 60 / ors_rate_limit - (end_time_ - start_time)
 			if sleep_time > 0:
 				_time.sleep(sleep_time)
 
