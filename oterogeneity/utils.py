@@ -604,7 +604,7 @@ def compute_travel_time_matrix(
 			_np.repeat(_np.expand_dims(_np.array(destinations_to_compute), axis=0), len(sources_to_compute),      axis=0)
 		] = 1
 
-		while True:t
+		while True:
 			start_time = _time.time()
 
 			n_to_compute = min(int(_np.floor(ors_max_request//len(sources_to_compute))), len(destinations_to_compute))
